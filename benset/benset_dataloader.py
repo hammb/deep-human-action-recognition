@@ -44,7 +44,8 @@ class Benset(object):
                     #Mapping of seqences and corresponding frames
                     self.dataset_structure[seq_structure[counter]] = files
                     counter += 1
-                    
+        
+        
     
     def get_dataset_length(self):
         

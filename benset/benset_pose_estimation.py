@@ -8,4 +8,4 @@ from benset_dataloader import *
 
 benset = Benset('datasets/Benset')
 
-#benset_seq = 
+benset_seq = BatchLoader(benset.get_dataset_structure(), benset.get_test_data(),[0,0],1)
