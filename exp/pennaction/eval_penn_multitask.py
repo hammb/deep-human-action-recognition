@@ -1,6 +1,9 @@
 import os
 import sys
 
+from tensorflow.keras.callbacks import TensorBoard
+import tensorflow as tf
+import time
 #if os.path.realpath(os.getcwd()) != os.path.dirname(os.path.realpath(__file__)):
 #    sys.path.append(os.getcwd())
 
@@ -12,7 +15,6 @@ from deephar.config import ModelConfig
 
 from deephar.data import MpiiSinglePerson
 from deephar.data import PennAction
-from deephar.data import Squads
 from deephar.data import BatchLoader
 
 from deephar.models import split_model
@@ -25,6 +27,10 @@ sys.path.append(os.path.join(os.getcwd(), 'exp/common'))
 from mpii_tools import eval_singleperson_pckh
 from penn_tools import eval_singleclip_generator
 from penn_tools import eval_multiclip_dataset
+
+NAME = "Deephar-{}".format(int(time.time()))
+
+#tensorboard = TensorBoard(log_dir='logs/{}'.format(NAME))
 
 logdir = './'
 if len(sys.argv) > 1:
@@ -54,16 +60,6 @@ num_actions = 15
 """Load datasets"""
 mpii = MpiiSinglePerson('E:\Bachelorarbeit-SS20\datasets\MPII', dataconf=mpii_dataconf,
         poselayout=pa16j2d)
-
-"""Load Squads dataset."""
-
-#squads_dataconf = pennaction_dataconf
-
-#squad_seq = Squads('datasets/Squads', squads_dataconf,
-#        poselayout=pa16j2d, topology='sequences', use_gt_bbox=use_bbox,
-#        clip_size=num_frames)
-
-#squad_frame_list = squad_seq.get_clip_index()
 
 """Load PennAction dataset."""
 penn_seq = PennAction('E:\Bachelorarbeit-SS20\datasets\PennAction', pennaction_dataconf,
@@ -101,7 +97,7 @@ penn_te = BatchLoader(penn_seq, ['frame'], ['pennaction'], TEST_MODE,
 """Evaluate on 2D action recognition (PennAction).""" 
 s = eval_singleclip_generator(models[1], penn_te)
 print ('Best score on PennAction (single-clip): ' + str(s))
-
+ 
 s = eval_multiclip_dataset(models[1], penn_seq,
         subsampling=pennaction_dataconf.fixed_subsampling)
 print ('Best score on PennAction (multi-clip): ' + str(s))
@@ -130,3 +126,8 @@ subsampling=pennaction_dataconf.fixed_subsampling
 bboxes_file=None
 logdir=None
 verbose=1
+
+# Open the file
+with open("logs/" + NAME + '-report.txt','w') as fh:
+    # Pass the file handle in as a lambda function to make it callable
+    models[1].summary(print_fn=lambda x: fh.write(x + '\n'))

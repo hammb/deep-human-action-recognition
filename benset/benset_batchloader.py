@@ -10,16 +10,19 @@ import cv2
 
 class BatchLoader(Sequence):
 
-    def __init__(self, dataset_structure, x_set, y_set, batch_size=1):
+    def __init__(self, dataset_structure, x_set, y_set, batch_size=6, num_frames = 16):
             self.dataset_structure = dataset_structure
             self.x = x_set
             self.y = y_set
             self.batch_size = batch_size
+            self.num_frames = num_frames
 
     def __len__(self):
             return math.ceil(len(self.x) / self.batch_size)
 
     def __getitem__(self, idx):
+        
+            batch_x = []
         
             #If last batch
             if (idx + 1) == self.__len__():
@@ -33,43 +36,60 @@ class BatchLoader(Sequence):
             else:
                 batch_size = self.batch_size
             
-            for sequence_id in batch_size:
+            for batch_item in range(batch_size):
+                #Path to Clip
+                path = self.x[idx * self.batch_size:(idx + 1) * self.batch_size][batch_item]
                 
-                
-            
-            #Path to Clip
-            path = self.x[idx * self.batch_size:(idx + 1) * self.batch_size][0]
-            #Last four characters of path (e.g. 0004)
-            idx = self.x[idx * self.batch_size:(idx + 1) * self.batch_size][0][-4:]
+                #Last four characters of path (e.g. 0004)
+                sequence_id = path[-4:]
         
-            frames_of_sequence = self.dataset_structure[idx]
+                frames_of_sequence = self.dataset_structure[sequence_id]
             
-            sequence = []
+                sequence = []
             
-            for frame in frames_of_sequence:
+                for frame in frames_of_sequence:
                 
-                #Path of each Frame of this Sequence
-                final_path = "{}{}{}".format(path, os.sep, frame)
+                    #Path of each Frame of this Sequence
+                    final_path = "{}{}{}".format(path, os.sep, frame)
                 
-                #load Image
-                img = cv2.imread(final_path,1)
+                    #load Image
+                    img = cv2.imread(final_path,1)
                 
-                #restore RGB
-                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                    #restore RGB
+                    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
                 
-                #resize to 256x256
-                img_256 = cv2.resize(img, (256,256), interpolation = cv2.INTER_AREA)
+                    #resize to 256x256
+                    img_256 = cv2.resize(img, (256,256), interpolation = cv2.INTER_AREA)
                 
-                #normalize
-                img_256_norm = cv2.normalize(img_256, None, -1, 1, cv2.NORM_MINMAX, cv2.CV_64F)
+                    #normalize
+                    img_256_norm = cv2.normalize(img_256, None, -1, 1, cv2.NORM_MINMAX, cv2.CV_64F)
                 
-                sequence.append(img_256_norm)
+                    sequence.append(img_256_norm)
                 
-            sequence = np.expand_dims(sequence, 0)
+                #sequence = np.expand_dims(sequence, 0)
+                batch_x.append(sequence)
             
-            batch_x = sequence
+            
             batch_y = [0]
 
-            return np.array([]), np.array(batch_y)
+            self.set_frame_list(batch_x)
 
+            return batch_x, batch_y
+
+    def set_frame_list(self, batch_x):
+        
+        self.frame_list = []
+        
+        for batch in batch_x:
+            num_frame_lists = int(len(batch) / self.num_frames)
+            
+            sub_frame_list = []
+            for i in range(num_frame_lists):
+                start = (i) * self.num_frames
+                end = (i+1) * self.num_frames
+                sub_frame_list.append(range(start, end))
+                
+            self.frame_list.append(sub_frame_list)
     
+    def get_frame_list(self):
+        return self.frame_list
