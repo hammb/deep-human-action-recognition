@@ -1,9 +1,13 @@
 import numpy as np
-import math
+import math as calc
 from tensorflow.python.keras.utils import Sequence
 
 import os
 import cv2
+
+from PIL import Image
+from deephar.utils import *
+from deephar.config import pennaction_dataconf
 
 # Here, `x_set` is list of path to the Frames
 # and `y_set` are the associated classes.
@@ -16,14 +20,15 @@ class BatchLoader(Sequence):
             self.y = y_set
             self.batch_size = batch_size
             self.num_frames = num_frames
+            self.dconf = pennaction_dataconf.get_fixed_config()
 
     def __len__(self):
-            return math.ceil(len(self.x) / self.batch_size)
+            return calc.ceil(len(self.x) / self.batch_size)
 
     def __getitem__(self, idx):
         
             batch_x = []
-        
+            
             #If last batch
             if (idx + 1) == self.__len__():
                 #Is last batch smaler than normal batchsize? 
@@ -36,7 +41,9 @@ class BatchLoader(Sequence):
             else:
                 batch_size = self.batch_size
             
+            
             for batch_item in range(batch_size):
+                
                 #Path to Clip
                 path = self.x[idx * self.batch_size:(idx + 1) * self.batch_size][batch_item]
                 
@@ -46,27 +53,45 @@ class BatchLoader(Sequence):
                 frames_of_sequence = self.dataset_structure[sequence_id]
             
                 sequence = []
-            
+                i = 0
                 for frame in frames_of_sequence:
-                
+                    
                     #Path of each Frame of this Sequence
                     final_path = "{}{}{}".format(path, os.sep, frame)
                 
                     #load Image
-                    img = cv2.imread(final_path,1)
-                
+                    img = T(Image.open(final_path))
+                    #img = cv2.imread(final_path,1)
+                    
+                    
+                    w, h = (img.size[0], img.size[1])
+                    
+                    bbox = objposwin_to_bbox(np.array([w / 2, h / 2]), (self.dconf['scale']*max(w, h), self.dconf['scale']*max(w, h)))
+                    
+                    objpos, winsize = bbox_to_objposwin(bbox)
+                    
+                    img.rotate_crop(self.dconf['angle'], objpos, winsize)
+                    img.resize(pennaction_dataconf.crop_resolution)
+                    img.normalize_affinemap()
+                    
+                    img = normalize_channels(img.asarray(), channel_power=self.dconf['chpower'])
+                        
+                        
+                        
+                        
                     #restore RGB
-                    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                    #img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
                 
                     #resize to 256x256
-                    img_256 = cv2.resize(img, (256,256), interpolation = cv2.INTER_AREA)
+                    #img_256 = cv2.resize(img, (256,256), interpolation = cv2.INTER_AREA)
                 
                     #normalize
-                    img_256_norm = cv2.normalize(img_256, None, -1, 1, cv2.NORM_MINMAX, cv2.CV_64F)
+                    #img_256_norm = cv2.normalize(img_256, None, -1, 1, cv2.NORM_MINMAX, cv2.CV_64F)
                 
-                    sequence.append(img_256_norm)
+                    sequence.append(img)
+                    i = i + 1
                 
-                #sequence = np.expand_dims(sequence, 0)
+                sequence = np.expand_dims(sequence, 0)
                 batch_x.append(sequence)
             
             
@@ -78,10 +103,12 @@ class BatchLoader(Sequence):
 
     def set_frame_list(self, batch_x):
         
+        
+        
         self.frame_list = []
         
         for batch in batch_x:
-            num_frame_lists = int(len(batch) / self.num_frames)
+            num_frame_lists = int(len(batch[0]) / self.num_frames)
             
             sub_frame_list = []
             for i in range(num_frame_lists):

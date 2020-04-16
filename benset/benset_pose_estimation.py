@@ -47,23 +47,36 @@ models = split_model(full_model, cfg, interlaced=False,
 
 """Load Data"""
 benset = Benset('datasets/Benset')
-benset_seq = BatchLoader(benset.get_dataset_structure(), benset.get_test_data(),[0,0],2)
+benset_seq = BatchLoader(benset.get_dataset_structure(), benset.get_test_data(),[0,0],2,num_frames)
 
 x_batch, y_batch = benset_seq.__getitem__(0)
 frame_list_groups = benset_seq.get_frame_list()
 
+action_labels = ['baseball_pitch', 'baseball_swing', 'bench_press', 'bowl',
+       'clean_and_jerk', 'golf_swing', 'jump_rope', 'jumping_jacks',
+       'pullup', 'pushup', 'situp', 'squat', 'strum_guitar',
+       'tennis_forehand', 'tennis_serve']
 
+pred = []
 index = 0
 for frame_lists in frame_list_groups:
+    sets = []
     for i in range(len(frame_lists)):
         
         first_frame = frame_lists[i].start
         last_frame = frame_lists[i].stop
-        input = x_batch[index][first_frame:last_frame]
         
-        """PREDICT"""
+        input = x_batch[1][:,first_frame:last_frame,:,:,:]
+        prediction = models[1].predict(input)
         
+        for p in range(len(prediction)):
+            print(action_labels[np.argmax(prediction[p][0])] + " - (" + str(prediction[p][0][np.argmax(prediction[p][0])]) + ")")
+           
         
+        print("")   
+        sets.append(prediction)
+        
+    pred.append(sets)
     index = index + 1
     
 

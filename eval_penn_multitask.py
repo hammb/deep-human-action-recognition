@@ -58,8 +58,8 @@ num_joints = 16
 num_actions = 15
 
 """Load datasets"""
-mpii = MpiiSinglePerson('E:\Bachelorarbeit-SS20\datasets\MPII', dataconf=mpii_dataconf,
-        poselayout=pa16j2d)
+#mpii = MpiiSinglePerson('E:\Bachelorarbeit-SS20\datasets\MPII', dataconf=mpii_dataconf,
+#        poselayout=pa16j2d)
 
 """Load PennAction dataset."""
 penn_seq = PennAction('E:\Bachelorarbeit-SS20\datasets\PennAction', pennaction_dataconf,
@@ -84,10 +84,10 @@ models = split_model(full_model, cfg, interlaced=False,
  
 
 """Trick to pre-load validation samples from MPII."""
-mpii_val = BatchLoader(mpii, ['frame'], ['pose', 'afmat', 'headsize'],
-        VALID_MODE, batch_size=mpii.get_length(VALID_MODE), shuffle=False)
-printnl('Pre-loading MPII validation data...')
-[x_val], [p_val, afmat_val, head_val] = mpii_val[0]
+#mpii_val = BatchLoader(mpii, ['frame'], ['pose', 'afmat', 'headsize'],
+#        VALID_MODE, batch_size=mpii.get_length(VALID_MODE), shuffle=False)
+#printnl('Pre-loading MPII validation data...')
+#[x_val], [p_val, afmat_val, head_val] = mpii_val[0]
 
 
 """Define a loader for PennAction test samples. """
@@ -103,8 +103,8 @@ s = eval_multiclip_dataset(models[1], penn_seq,
 print ('Best score on PennAction (multi-clip): ' + str(s))
 
 """Evaluate on 2D pose estimation (MPII)."""
-s = eval_singleperson_pckh(models[0], x_val, p_val[:, :, 0:2], afmat_val, head_val)
-print ('Best score on MPII: ' + str(s))
+#s = eval_singleperson_pckh(models[0], x_val, p_val[:, :, 0:2], afmat_val, head_val)
+#print ('Best score on MPII: ' + str(s))
 
 
 ##############################################################################################
