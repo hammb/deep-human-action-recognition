@@ -27,7 +27,7 @@ if len(sys.argv) > 1:
     mkdir(logdir)
     sys.stdout = open(str(logdir) + '/log.txt', 'w')
 
-num_frames = 16
+num_frames = 32
 cfg = ModelConfig((num_frames,) + pennaction_dataconf.input_shape, pa16j2d,
         num_actions=[15], num_pyramids=6, action_pyramids=[5, 6],
         num_levels=4, pose_replica=True,
@@ -125,7 +125,11 @@ while True:
         #frames = np.squeeze(frames, axis=0)
         #expand Dimension and Predict
         prediction = models[1].predict(np.expand_dims(frames, axis=0)) 
-        print(action_labels[np.argmax(prediction[5])])
+        print("--------------------------------")
+        for p in prediction:
+            print(action_labels[[i for i, x in enumerate(p[0]) if x == max(p[0])][0]])
+            print("")
+        print("--------------------------------")
         frames = np.zeros((num_frames,) + pennaction_dataconf.input_shape)
         frame_counter = 0
         input_data = []

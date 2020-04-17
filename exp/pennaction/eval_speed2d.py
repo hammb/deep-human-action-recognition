@@ -41,7 +41,7 @@ num_action_predictions = \
 
 
 """Load PennAction"""
-penn_seq = PennAction('datasets/PennAction', pennaction_dataconf,
+penn_seq = PennAction('E:\Bachelorarbeit-SS20\datasets\PennAction', pennaction_dataconf,
         poselayout=pa16j2d, topology='sequences', use_gt_bbox=False,
         pred_bboxes_file='pred_bboxes_penn.json', clip_size=num_frames)
 
@@ -50,7 +50,7 @@ penn_seq = PennAction('datasets/PennAction', pennaction_dataconf,
 full_model = spnet.build(cfg)
 
 """Load pre-trained weights from pose estimation and copy replica layers."""
-full_model.load_weights('output/weights_AR_merge_ep074_26-10-17.h5',by_name=True)
+full_model.load_weights('output/weights_PE_MPII_cvpr18_19-09-2017.h5',by_name=True)
 
 """Pre-load some samples from PennAction."""
 penn_te = BatchLoader(penn_seq, ['frame'], ['pennaction'], TEST_MODE,
@@ -72,6 +72,7 @@ for bidx in range(num_blocks):
     _ = m.predict(x, batch_size=2, verbose=1)
     end = time.time()
     fps = num_clips * num_frames / (end - start)
+    print (fps)
     fps_list.append(fps)
 
 print (fps_list)
