@@ -63,14 +63,11 @@ class PennAction(object):
         self.pose_only = pose_only
         self.output_fullframe = output_fullframe
         self.load_annotations(os.path.join(dataset_path, 'penn_annotations.mat'))
-        if use_gt_bbox:
-            if pred_bboxes_file is not None:
-                filepath = os.path.join(dataset_path, pred_bboxes_file)
-                with open(filepath, 'r') as fid:
-                    self.pred_bboxes = json.load(fid)
-            else:
-                print('use_gt_bbox=True but No Filename provided')
-                self.pred_bboxes = None
+        
+        if pred_bboxes_file:
+            filepath = os.path.join(dataset_path, pred_bboxes_file)
+            with open(filepath, 'r') as fid:
+                self.pred_bboxes = json.load(fid)
         else:
             self.pred_bboxes = None
 
@@ -118,7 +115,7 @@ class PennAction(object):
         """Load pose annotation"""
         pose, visible = self.get_pose_annot(objframes)
         w, h = (objframes[0].w, objframes[0].h)
-
+        
         """Compute cropping bounding box, if not given."""
         if bbox is None:
 
@@ -127,8 +124,10 @@ class PennAction(object):
                         scale=dconf['scale'], logkey=key)
 
             elif self.pred_bboxes:
+                
                 bbox = compute_clip_bbox(
                         self.pred_bboxes[mode], seq_idx, frame_list)
+                
 
             else:
                 bbox = objposwin_to_bbox(np.array([w / 2, h / 2]),
@@ -160,7 +159,7 @@ class PennAction(object):
 
             imgt.rotate_crop(dconf['angle'], objpos, winsize)
             imgt.resize(self.dataconf.crop_resolution)
-
+            
             if dconf['hflip'] == 1:
                 imgt.horizontal_flip()
 
@@ -173,7 +172,7 @@ class PennAction(object):
                     transpose=True)
             if imgt.hflip:
                 pose[i, :, :] = pose[i, self.poselayout.map_hflip, :]
-
+        
         """Set outsider body joints to invalid (-1e9)."""
         pose = np.reshape(pose, (-1, self.poselayout.dim))
         pose[np.isnan(pose)] = -1e9

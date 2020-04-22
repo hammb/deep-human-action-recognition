@@ -36,7 +36,7 @@ cfg = ModelConfig(dconf.input_shape, pa16j2d, num_pyramids=8, num_levels=4)
 
 """Load dataset"""
 #dpath = datasetpath('Penn_Action')
-penn = PennAction('datasets/PennAction', dconf, poselayout=pa16j2d, topology='frames',
+penn = PennAction('E:\Bachelorarbeit-SS20\datasets\PennAction', dconf, poselayout=pa16j2d, topology='frames',
         use_gt_bbox=False)
 
 """Build and compile the network."""

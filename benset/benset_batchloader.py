@@ -60,23 +60,27 @@ class BatchLoader(Sequence):
                     final_path = "{}{}{}".format(path, os.sep, frame)
                 
                     #load Image
-                    img = T(Image.open(final_path))
-                    #img = cv2.imread(final_path,1)
+                    #img = T(Image.open(final_path))
+                    img = cv2.imread(final_path,1)
                     
                     
-                    w, h = (img.size[0], img.size[1])
+                    #w, h = (img.size[0], img.size[1])
                     
-                    bbox = objposwin_to_bbox(np.array([w / 2, h / 2]), (self.dconf['scale']*max(w, h), self.dconf['scale']*max(w, h)))
+                    #bbox = objposwin_to_bbox(np.array([w / 2, h / 2]), (self.dconf['scale']*max(w, h), self.dconf['scale']*max(w, h)))
                     
-                    objpos, winsize = bbox_to_objposwin(bbox)
+                    #objpos, winsize = bbox_to_objposwin(bbox)
                     
-                    img.rotate_crop(self.dconf['angle'], objpos, winsize)
-                    img.resize(pennaction_dataconf.crop_resolution)
-                    img.normalize_affinemap()
+                    #img.rotate_crop(self.dconf['angle'], objpos, winsize)
                     
-                    img = normalize_channels(img.asarray(), channel_power=self.dconf['chpower'])
-                        
-                        
+                    #img.resize(pennaction_dataconf.crop_resolution)
+                    #img.normalize_affinemap()
+                    #img = normalize_channels(img.asarray(), channel_power=self.dconf['chpower'])
+                       
+                    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                    #resize to 256x256
+                    img_256 = cv2.resize(img, (256,256), interpolation = cv2.INTER_AREA)
+                    #normalize
+                    img_256_norm = cv2.normalize(img_256, None, -1, 1, cv2.NORM_MINMAX, cv2.CV_64F)
                         
                         
                     #restore RGB
@@ -88,15 +92,18 @@ class BatchLoader(Sequence):
                     #normalize
                     #img_256_norm = cv2.normalize(img_256, None, -1, 1, cv2.NORM_MINMAX, cv2.CV_64F)
                 
-                    sequence.append(img)
+                    sequence.append(img_256_norm)
                     i = i + 1
                 
-                sequence = np.expand_dims(sequence, 0)
+                sequence = np.expand_dims(sequence, axis=0)
                 batch_x.append(sequence)
             
+            if self.batch_size == 1:
+                really_bad_hardcoded_batch_y = [27, 25, 18, 33, 43, 20, 45, 31, 0, 22, 2]
+                batch_y = really_bad_hardcoded_batch_y[idx]
+            else:
+                batch_y = []
             
-            batch_y = [0]
-
             self.set_frame_list(batch_x)
 
             return batch_x, batch_y

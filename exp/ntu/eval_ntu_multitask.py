@@ -1,8 +1,8 @@
 import os
 import sys
 
-if os.path.realpath(os.getcwd()) != os.path.dirname(os.path.realpath(__file__)):
-    sys.path.append(os.getcwd())
+#if os.path.realpath(os.getcwd()) != os.path.dirname(os.path.realpath(__file__)):
+#    sys.path.append(os.getcwd())
 
 import deephar
 
@@ -21,7 +21,7 @@ from deephar.models import spnet
 from deephar.utils import *
 
 sys.path.append(os.path.join(os.getcwd(), 'exp/common'))
-from datasetpath import datasetpath
+#from datasetpath import datasetpath
 
 from h36m_tools import eval_human36m_sc_error
 from ntu_tools import eval_multiclip_dataset
@@ -45,7 +45,7 @@ num_action_predictions = spnet.get_num_predictions(len(cfg.action_pyramids), cfg
 # h36m = Human36M(datasetpath('Human3.6M'), dataconf=human36m_dataconf,
         # poselayout=pa17j3d, topology='frames')
 
-ntu = Ntu(datasetpath('NTU'), ntu_dataconf, poselayout=pa17j3d,
+ntu = Ntu("E:\\Bachelorarbeit-SS20\\datasets\\NTU", ntu_dataconf, poselayout=pa17j3d,
         topology='sequences', use_gt_bbox=True, clip_size=num_frames)#, num_S=1)
 # print ('WARNING!! USING ONLY S1 FOR EVALUATION!')
 
@@ -55,7 +55,7 @@ full_model = spnet.build(cfg)
 """Load pre-trained weights from pose estimation and copy replica layers."""
 full_model.load_weights(
         # 'output/ntu_spnet_trial-03-ft_replica_0ae2bf7/weights_3dp+ntu_ar_062.hdf5',
-        'output/ntu_spnet_trial_06_nopose_g_512a239/weights_3dp+ntu_ar_030.hdf5',
+        'output/weights_AR_merge_NTU_v2.h5',
         by_name=True)
 
 """Split model to simplify evaluation."""

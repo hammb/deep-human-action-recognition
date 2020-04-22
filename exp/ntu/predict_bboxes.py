@@ -4,8 +4,8 @@ import sys
 import numpy as np
 import json
 
-if os.path.realpath(os.getcwd()) != os.path.dirname(os.path.realpath(__file__)):
-    sys.path.append(os.getcwd())
+#if os.path.realpath(os.getcwd()) != os.path.dirname(os.path.realpath(__file__)):
+#    sys.path.append(os.getcwd())
 
 import deephar
 
@@ -22,7 +22,7 @@ from deephar.utils import *
 from keras.models import Model
 
 sys.path.append(os.path.join(os.getcwd(), 'exp/common'))
-from datasetpath import datasetpath
+#from datasetpath import datasetpath
 from generic import get_bbox_from_poses
 
 from keras.models import Model
@@ -45,7 +45,7 @@ model = Model(full_model.input, full_model.outputs[-1])
 model.summary()
 
 """Load dataset"""
-ntu = Ntu(datasetpath('NTU'), dconf, poselayout=pa17j3d, topology='frames',
+ntu = Ntu("E:\\Bachelorarbeit-SS20\\datasets\\NTU", dconf, poselayout=pa17j3d, topology='frames',
         use_gt_bbox=False)
 
 def predict_frame_bboxes(mode):

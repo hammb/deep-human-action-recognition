@@ -4,7 +4,7 @@ import numpy as np
 import json
 import time
 
-from tensorflow.python.keras.callbacks import Callback
+from keras.callbacks import Callback
 
 from deephar.data import BatchLoader
 from deephar.utils import *
@@ -52,7 +52,7 @@ def eval_singleclip_gt_bbox_generator(model, datagen, verbose=1, logdir=None):
             y_pred = np.zeros((num_samples, num_blocks) + y.shape[1:])
 
         y_true[i, :] = y
-        pred = model.predict(np.array(x))
+        pred = model.predict(x)
         for b in range(num_blocks):
             y_pred[i, b, :] = pred[b]
 
@@ -105,7 +105,7 @@ def eval_multiclip_dataset(model, penn, subsampling, bboxes_file=None,
             printc(OKBLUE, '%04d/%04d\t' % (i, num_samples))
 
         frame_list = penn.get_clip_index(i, TEST_MODE, subsamples=[subsampling])
-        
+
         """Variable to hold all preditions for this sequence.
         2x frame_list due to hflip.
         """
@@ -116,11 +116,12 @@ def eval_multiclip_dataset(model, penn, subsampling, bboxes_file=None,
                 preds_clip = []
                 try:
                     penn.dataconf.fixed_hflip = hflip # Force horizontal flip
-
+                    
                     """Load clip and predict action."""
                     data = penn.get_data(i, TEST_MODE, frame_list=frame_list[f])
+                    
                     a_true[i, :] = data['pennaction']
-
+                    
                     pred = model.predict(np.expand_dims(data['frame'], axis=0))
                     for b in range(num_blocks):
                         allpred[b, 2*f+hflip, :] = pred[b][0]
@@ -218,4 +219,3 @@ class PennActionEvalCallback(Callback):
 # Aliases.
 eval_singleclip = eval_singleclip_gt_bbox
 eval_singleclip_generator = eval_singleclip_gt_bbox_generator
-

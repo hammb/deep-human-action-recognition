@@ -1,14 +1,14 @@
 import os
 import sys
 
-if os.path.realpath(os.getcwd()) != os.path.dirname(os.path.realpath(__file__)):
-    sys.path.append(os.getcwd())
+#if os.path.realpath(os.getcwd()) != os.path.dirname(os.path.realpath(__file__)):
+#    sys.path.append(os.getcwd())
 
 import deephar
 
 from keras.utils.data_utils import get_file
 
-from deephar.config import ntu_ar_dataconf
+from deephar.config import ntu_dataconf
 
 from deephar.data import Ntu
 from deephar.data import BatchLoader
@@ -21,9 +21,9 @@ sys.path.append(os.path.join(os.getcwd(), 'exp/common'))
 from ntu_tools import eval_singleclip_generator
 
 sys.path.append(os.path.join(os.getcwd(), 'datasets'))
-import annothelper
+#import annothelper
 
-annothelper.check_ntu_dataset()
+#annothelper.check_ntu_dataset()
 
 weights_file = 'weights_AR_merge_NTU_v2.h5'
 TF_WEIGHTS_PATH = \
@@ -45,7 +45,7 @@ depth_maps = 8
 num_joints = 20
 num_actions = 60
 pose_dim = 3
-input_shape = ntu_ar_dataconf.input_shape
+input_shape = ntu_dataconf.input_shape
 
 """Build the pose estimation model."""
 model_pe = reception.build(input_shape, num_joints, dim=pose_dim,
@@ -63,7 +63,7 @@ weights_path = get_file(weights_file, TF_WEIGHTS_PATH, md5_hash=md5_hash,
 model.load_weights(weights_path)
 
 """Load NTU dataset."""
-ntu = Ntu('datasets/NTU', ntu_ar_dataconf, poselayout=pa20j3d,
+ntu = Ntu("E:\\Bachelorarbeit-SS20\\datasets\\NTU", ntu_dataconf, poselayout=pa20j3d,
         topology='sequences', use_gt_bbox=True, clip_size=num_frames)
 
 ntu_te = BatchLoader(ntu, ['frame'], ['ntuaction'], TEST_MODE,

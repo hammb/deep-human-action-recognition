@@ -24,7 +24,7 @@ from penn_tools import eval_multiclip_dataset
 sys.path.append(os.path.join(os.getcwd(), 'datasets'))
 import annothelper
 
-annothelper.check_pennaction_dataset()
+#annothelper.check_pennaction_dataset()
 
 weights_file = 'weights_AR_merge_ep074_26-10-17.h5'
 TF_WEIGHTS_PATH = \
@@ -40,8 +40,7 @@ if len(sys.argv) > 1:
 
 
 num_frames = 16
-use_bbox = True
-pred_bboxes_file = 'penn_pred_bboxes_16f.json'
+use_bbox = False
 num_blocks = 4
 batch_size = 2
 input_shape = pennaction_dataconf.input_shape
@@ -63,22 +62,13 @@ weights_path = get_file(weights_file, TF_WEIGHTS_PATH, md5_hash=md5_hash,
 model.load_weights(weights_path)
 
 """Load PennAction dataset."""
-penn_seq = PennAction('datasets/PennAction', pennaction_dataconf,
+penn_seq = PennAction('E:\Bachelorarbeit-SS20\datasets\PennAction', pennaction_dataconf,
         poselayout=pa16j2d, topology='sequences', use_gt_bbox=use_bbox,
-        pred_bboxes_file=pred_bboxes_file,
-        clip_size=num_frames)
+        clip_size=num_frames, pred_bboxes_file = 'penn_pred_bboxes_16f.json')
 
 penn_te = BatchLoader(penn_seq, ['frame'], ['pennaction'], TEST_MODE,
         batch_size=1, shuffle=False)
 
-#1068
+
 printcn(OKGREEN, 'Evaluation on PennAction multi-clip using predicted bboxes')
-eval_multiclip_dataset(model, penn_seq, 4, 
-        pred_bboxes_file,
-        logdir)
-#################################################################################################
-penn = penn_seq
-subsampling = 2
-bboxes_file = 'datasets/PennAction/penn_pred_bboxes_16f.json'
-logdir=logdir
-verbose=1
+eval_multiclip_dataset(model, penn_seq, subsampling = 2, logdir=logdir)
