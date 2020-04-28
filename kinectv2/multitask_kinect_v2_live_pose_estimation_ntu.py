@@ -120,9 +120,7 @@ while True:
           
         index = 0
         for x in pred_x_y_1080:
-            if joints[index] > 0.5:  
-                img_out = cv2.circle(img, (int(x[0]), int(x[1])), 6, (0, 0, 255), -1)
-                
+            img_out = cv2.circle(img, (int(x[0]), int(x[1])), 6, (0, 0, 255), -1)
             index = index + 1
         
         cv2.imshow('Recording KINECT Video Stream', img_out)
