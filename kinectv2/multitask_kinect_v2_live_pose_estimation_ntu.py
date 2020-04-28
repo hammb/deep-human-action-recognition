@@ -117,11 +117,7 @@ while True:
 
         pred_x_y_1 = pred_x_y_z_1[:,0:2]
         pred_x_y_1080 = np.interp(pred_x_y_1, (0, 1), (0, 1080))
-        
-        joints = []
-        for x in prediction[5][0][0]:
-            joints.append(1)
-             
+          
         index = 0
         for x in pred_x_y_1080:
             if joints[index] > 0.5:  
