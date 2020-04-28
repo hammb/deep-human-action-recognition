@@ -36,13 +36,13 @@ cfg = ModelConfig(dconf.input_shape, pa16j2d, num_pyramids=8, num_levels=4)
 
 """Load dataset"""
 #dpath = datasetpath('Penn_Action')
-penn = PennAction('E:\Bachelorarbeit-SS20\datasets\PennAction', dconf, poselayout=pa16j2d, topology='frames',
+penn = PennAction('E:\\Bachelorarbeit-SS20\\datasets\\PennAction', dconf, poselayout=pa16j2d, topology='frames',
         use_gt_bbox=False)
 
 """Build and compile the network."""
 model = spnet.build(cfg)
 model.load_weights(
-        'output/weights_AR_merge_ep074_26-10-17.h5')
+        'output/mpii_spnet_51b_741a720/weights_mpii_spnet_8b4l_050.hdf5')
 
 """Squeeze the model for only one output."""
 model = Model(model.input, model.outputs[-1])
@@ -71,7 +71,6 @@ bbox_val = predict_frame_bboxes(VALID_MODE)
 
 jsondata = [bbox_te, bbox_tr, bbox_val]
 
-filename = os.path.join('datasets/PennAction', 'penn_pred_bboxess.json')
+filename = os.path.join(dpath, 'pred_bboxes_penn.json')
 with open(filename, 'w') as fid:
     json.dump(jsondata, fid)
-

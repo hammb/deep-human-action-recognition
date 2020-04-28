@@ -56,7 +56,9 @@ def eval_multiclip_dataset(model, ntu, subsampling, bboxes_file=None,
 
     num_samples = ntu.get_length(TEST_MODE)
     num_blocks = len(model.outputs)
-
+    
+    preds = []
+    
     """Save and reset some original configs from the dataset."""
     org_hflip = ntu.dataconf.fixed_hflip
     org_use_gt_bbox = ntu.use_gt_bbox
@@ -108,8 +110,11 @@ def eval_multiclip_dataset(model, ntu, subsampling, bboxes_file=None,
                     data = ntu.get_data(i, TEST_MODE, frame_list=frame_list[f],
                             bbox=bbox)
                     a_true[i, :] = data['ntuaction']
-
+                    
                     pred = model.predict(np.expand_dims(data['frame'], axis=0))
+                    
+                    preds.append(pred)
+                    
                     for b in range(num_blocks):
                         allpred[b, 2*f+hflip, :] = pred[b][0]
                         a_pred[b, i, :] *= pred[b][0]
@@ -148,7 +153,7 @@ def eval_multiclip_dataset(model, ntu, subsampling, bboxes_file=None,
     ntu.dataconf.fixed_hflip = org_hflip
     ntu.use_gt_bbox = org_use_gt_bbox
 
-    return scores
+    return preds
 
 
 class NtuEvalCallback(Callback):

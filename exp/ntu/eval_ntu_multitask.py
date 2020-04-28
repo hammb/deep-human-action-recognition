@@ -55,7 +55,7 @@ full_model = spnet.build(cfg)
 """Load pre-trained weights from pose estimation and copy replica layers."""
 full_model.load_weights(
         # 'output/ntu_spnet_trial-03-ft_replica_0ae2bf7/weights_3dp+ntu_ar_062.hdf5',
-        'output/weights_AR_merge_NTU_v2.h5',
+        'output/weights_3dp+ntu_ar_030.hdf5',
         by_name=True)
 
 """Split model to simplify evaluation."""

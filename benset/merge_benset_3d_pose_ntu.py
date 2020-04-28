@@ -113,5 +113,6 @@ for frame_lists in frame_list_groups:
         
         input = x_batch[index][:,first_frame:last_frame,:,:,:]
         prediction = model.predict(input)
+        print(action_labels[np.argmax(prediction[-1])])
         
     index = index + 1
