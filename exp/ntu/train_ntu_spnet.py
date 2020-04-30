@@ -1,8 +1,8 @@
 import os
 import sys
 
-if os.path.realpath(os.getcwd()) != os.path.dirname(os.path.realpath(__file__)):
-    sys.path.append(os.getcwd())
+#if os.path.realpath(os.getcwd()) != os.path.dirname(os.path.realpath(__file__)):
+#    sys.path.append(os.getcwd())
 
 import deephar
 
@@ -32,7 +32,7 @@ from deephar.models import spnet
 from deephar.utils import *
 
 sys.path.append(os.path.join(os.getcwd(), 'exp/common'))
-from datasetpath import datasetpath
+#from datasetpath import datasetpath
 
 from mpii_tools import MpiiEvalCallback
 from h36m_tools import H36MEvalCallback
@@ -44,7 +44,7 @@ if len(sys.argv) > 1:
     mkdir(logdir)
     sys.stdout = open(str(logdir) + '/log.txt', 'w')
 
-num_frames = 8
+num_frames = 6
 cfg = ModelConfig((num_frames,) + ntu_dataconf.input_shape, pa17j3d,
         # num_actions=[60], num_pyramids=8, action_pyramids=[5, 6, 7, 8],
         num_actions=[60], num_pyramids=2, action_pyramids=[1, 2],
@@ -58,24 +58,24 @@ num_action_predictions = \
 start_lr = 0.01
 action_weight = 0.1
 batch_size_mpii = 3
-batch_size_h36m = 4
-batch_size_ntu = 8 #1
-batch_clips = 4 # 8/4
+#batch_size_h36m = 4
+batch_size_ntu = 6 #1
+batch_clips = 3 # 8/4
 
 """Load datasets"""
-mpii = MpiiSinglePerson(datasetpath('MPII'), dataconf=mpii_dataconf,
+mpii = MpiiSinglePerson("E:\\Bachelorarbeit-SS20\\datasets\\MPII", dataconf=mpii_dataconf,
         poselayout=pa17j3d)
 
 # h36m = Human36M(datasetpath('Human3.6M'), dataconf=human36m_dataconf,
         # poselayout=pa17j3d, topology='frames')
 
-ntu_sf = Ntu(datasetpath('NTU'), ntu_pe_dataconf, poselayout=pa17j3d,
+ntu_sf = Ntu("E:\\Bachelorarbeit-SS20\\datasets\\NTU", ntu_pe_dataconf, poselayout=pa17j3d,
         topology='frames', use_gt_bbox=True)
 
-ntu = Ntu(datasetpath('NTU'), ntu_dataconf, poselayout=pa17j3d,
+ntu = Ntu("E:\\Bachelorarbeit-SS20\\datasets\\NTU", ntu_dataconf, poselayout=pa17j3d,
         topology='sequences', use_gt_bbox=True, clip_size=num_frames)
 
-ntu_s1 = Ntu(datasetpath('NTU'), ntu_dataconf, poselayout=pa17j3d,
+ntu_s1 = Ntu("E:\\Bachelorarbeit-SS20\\datasets\\NTU", ntu_dataconf, poselayout=pa17j3d,
         topology='sequences', use_gt_bbox=True, clip_size=num_frames)
         # topology='sequences', use_gt_bbox=True, clip_size=num_frames, num_S=1)
 
@@ -93,9 +93,9 @@ ar_data_tr = BatchLoader(ntu, ['frame'], ['ntuaction'], TRAIN_MODE,
 full_model = spnet.build(cfg)
 
 """Load pre-trained weights from pose estimation and copy replica layers."""
-# full_model.load_weights(
-        # 'output/pose_baseline_3dp_02_94226e0/weights_posebaseline_060.hdf5',
-        # by_name=True)
+full_model.load_weights(
+         "C:\\networks\\deephar\\output\\ntu_baseline\\0429\\base_ntu_model_weights.hdf5",
+         by_name=True)
 # full_model.load_weights(
         # 'output/ntu_spnet_trial-03_fa9d2e2/weights_3dp+ntu_ar_050.hdf5',
         # by_name=True)
@@ -123,7 +123,7 @@ ntu_te = BatchLoader(ntu_s1, ['frame'], ['ntuaction'], TEST_MODE,
         batch_size=1, shuffle=False)
 
 """Save model callback."""
-save_model = SaveModel(os.path.join(logdir,
+save_model = SaveModel(os.path.join("C:\\networks\\deephar\\output\\spnet\\0429\\",
     'weights_3dp+ntu_ar_{epoch:03d}.hdf5'), model_to_save=full_model)
 
 

@@ -17,6 +17,7 @@ from pykinect2 import PyKinectRuntime
 
 import deephar
 
+from deephar.config import mpii_dataconf
 from deephar.config import human36m_dataconf
 from deephar.config import ntu_dataconf
 from deephar.config import ModelConfig
@@ -43,28 +44,19 @@ if len(sys.argv) > 1:
     mkdir(logdir)
     sys.stdout = open(str(logdir) + '/log.txt', 'w')
 
-num_frames = 1
-cfg = ModelConfig((num_frames,) + ntu_dataconf.input_shape, pa17j3d,
-        num_actions=[60], num_pyramids=2, action_pyramids=[1, 2],
-        num_levels=4, pose_replica=False,
-        num_pose_features=192, num_visual_features=192)
-
-num_predictions = spnet.get_num_predictions(cfg.num_pyramids, cfg.num_levels)
-num_action_predictions = spnet.get_num_predictions(len(cfg.action_pyramids), cfg.num_levels)
-
+cfg = ModelConfig(mpii_dataconf.input_shape, pa17j3d, num_pyramids=8,
+        action_pyramids=[], num_levels=4)
 
 """Build the full model"""
-full_model = spnet.build(cfg)
+model = spnet.build(cfg)
 
 """Load pre-trained weights from pose estimation and copy replica layers."""
-full_model.load_weights(
+model.load_weights(
         # 'output/ntu_spnet_trial-03-ft_replica_0ae2bf7/weights_3dp+ntu_ar_062.hdf5',
-        'output/weights_AR_merge_NTU_v2.h5',
+        "C:\\networks\\deephar\\output\\ntu_baseline\\0429\\base_ntu_model_weights.hdf5",
         by_name=True)
 
-"""Split model to simplify evaluation."""
-models = split_model(full_model, cfg, interlaced=False,
-        model_names=['3DPose', '3DAction'])
+
 
 """Load kinect"""
 
@@ -111,9 +103,9 @@ while True:
         #normalize
         img_256_norm = cv2.normalize(img_256, None, -1, 1, cv2.NORM_MINMAX, cv2.CV_64F)
         
-        prediction = models[0].predict(np.expand_dims(np.expand_dims(img_256_norm, 0),0))
+        prediction = model.predict(np.expand_dims(img_256_norm, 0))
         
-        pred_x_y_z_1 = prediction[5][0][0]
+        pred_x_y_z_1 = prediction[5][0]
 
         pred_x_y_1 = pred_x_y_z_1[:,0:2]
         pred_x_y_1080 = np.interp(pred_x_y_1, (0, 1), (0, 1080))
@@ -127,10 +119,6 @@ while True:
         frame = None
         
         
-    
-    
-    
-    
     key = cv2.waitKey(1)
     if key == 27: 
         kinect.close()

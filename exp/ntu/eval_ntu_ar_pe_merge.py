@@ -72,4 +72,3 @@ ntu_te = BatchLoader(ntu, ['frame'], ['ntuaction'], TEST_MODE,
 printcn(OKGREEN, 'Evaluation on NTU single-clip using GT bboxes')
 
 eval_singleclip_generator(model, ntu_te)
-

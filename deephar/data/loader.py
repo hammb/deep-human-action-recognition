@@ -7,7 +7,7 @@ from multiprocessing import Queue
 import queue
 import threading
 
-from tensorflow.python.keras.utils import Sequence
+from keras.utils import Sequence
 
 from deephar.utils import *
 
@@ -55,7 +55,7 @@ class BatchLoader(Sequence):
         self.x_dictkeys = x_dictkeys
         self.y_dictkeys = y_dictkeys
         self.allkeys = x_dictkeys + y_dictkeys
-
+        self.batch_index = 0
         """Include custom dictkeys into the output list."""
         self.custom_dummy_dictkey = custom_dummy_dictkey
         self.custom_dictkeys = []
@@ -196,6 +196,18 @@ class BatchLoader(Sequence):
             key = self.qkey[dataset_idx].get()
 
         return key
+
+    def __next__(self):
+        
+        if self.batch_index <= self.__len__():
+            batch = self.__getitem__(self.batch_index)
+        else:
+            batch = None
+            
+        self.batch_index = self.batch_index + 1
+         
+        return batch
+        
 
     @property
     def num_datasets(self):
