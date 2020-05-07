@@ -210,7 +210,7 @@ def prediction_block(xp, xa, zp, outlist, cfg, do_action, name=None):
             global act_cnt
             act_cnt = 0
         act_cnt += 1
-        act_name = 'act%d' % act_cnt
+        act_name = 'act%d%d' % (act_cnt,act_cnt)
 
         act_h = rep_h if replica else org_h
         act_h = Activation(channel_softmax_2d(alpha=sam_alpha),

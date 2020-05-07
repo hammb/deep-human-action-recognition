@@ -48,7 +48,7 @@ if len(sys.argv) > 1:
 
 num_frames = 6
 cfg = ModelConfig((num_frames,) + ntu_dataconf.input_shape, pa17j3d,
-        num_actions=[60], num_pyramids=2, action_pyramids=[1, 2],
+        num_actions=[5], num_pyramids=2, action_pyramids=[1, 2],
         num_levels=4, pose_replica=False,
         num_pose_features=192, num_visual_features=192)
 
@@ -59,16 +59,14 @@ num_action_predictions = \
 
 """Build the full model"""
 full_model = spnet.build(cfg)
+full_model.summary()
+plot_model(full_model, to_file='model.png')
 
-num_actions = 5
-modified_model = modify_model(full_model, cfg, num_actions)
-
-modified_model.summary()
-
-plot_model(modified_model, to_file='model.png')
+#num_actions = 5
+#modified_model = modify_model(full_model, cfg, num_actions)
 
 """Load pre-trained weights from pose estimation and copy replica layers."""
-modified_model.load_weights(
+full_model.load_weights(
          "E:\\Bachelorarbeit-SS20\\weights\\deephar\\output\\spnet\\0429\\weights_3dp+ntu_ar_048.hdf5",
          by_name=True)
 
