@@ -5,5 +5,6 @@ from .common import copy_replica_layers
 from .common import compile_model
 from .spnet import compile_split_models
 from .spnet import split_model
+from .spnet import modify_model
 from . import spnet
 

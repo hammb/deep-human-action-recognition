@@ -244,6 +244,8 @@ def prediction_block(xp, xa, zp, outlist, cfg, do_action, name=None):
 
     sys.stdout.flush()
 
+    
+
     return xp, xa
 
 
@@ -276,6 +278,8 @@ def downscaling_pyramid(lp, la, lzp, outlist, cfg, do_action, name=None):
         xp, xa = prediction_block(xp, xa, lzp[i], outlist, cfg, do_action,
                 name=appstr(name, '_pb%d' % i))
 
+        
+        
         lp[i] = xp # lateral pose connection
         la[i] = xa # lateral action connection
 
@@ -308,6 +312,8 @@ def upscaling_pyramid(lp, la, lzp, outlist, cfg, do_action, name=None):
 
         xp, xa = prediction_block(xp, xa, lzp[i], outlist, cfg, do_action,
                 name=appstr(name, '_pb%d' % i))
+
+        
 
         lp[i] = xp # lateral pose connection
         la[i] = xa # lateral action connection
@@ -368,6 +374,8 @@ def build(cfg, stop_grad_stem=False):
     for i in range(len(cfg.num_actions) + 1 + 2*cfg.dbg_decoupled_pose):
         outlist.append([])
 
+
+    
     if len(input_shape) == 3:
         num_rows, num_cols, _ = input_shape
     else:
@@ -389,6 +397,7 @@ def build(cfg, stop_grad_stem=False):
         lzp.append(None)
 
     lp[0] = x
+    
     for pyr in range(cfg.num_pyramids):
 
         do_action = (pyr + 1) in cfg.action_pyramids
@@ -400,11 +409,12 @@ def build(cfg, stop_grad_stem=False):
         else: # Odd pyramids (1, 3, ...)
             upscaling_pyramid(lp, la, lzp, outlist, cfg, do_action,
                     name='up%d' % (pyr+1))
-
+    
     outputs = []
     for o in outlist:
         outputs += o
-
+        
+    
     model = Model(inputs=inp, outputs=outputs, name='SPNet')
 
     return model
@@ -447,6 +457,29 @@ def split_model(full_model, cfg, interlaced=False, model_names=[None, None]):
 
     return [modelp, modela]
 
+def modify_model(full_model, cfg, interlaced=False, model_names=[None, None]):
+
+    num_pose_pred = get_num_predictions(cfg.num_pyramids, cfg.num_levels)
+    num_act_pred = get_num_predictions(len(cfg.action_pyramids), cfg.num_levels)
+    assert len(full_model.outputs) == \
+            num_pose_pred + len(cfg.num_actions)*num_act_pred, \
+            'The given model and config are not compatible!'
+    assert num_act_pred > 0, 'You are trying to split a "pose only" model.'
+
+    old_action_outputs = full_model.outputs[num_pose_pred:]
+    
+    new_outputs = full_model.outputs[:num_pose_pred]
+    
+    for old_action_output_index in range(len(old_action_outputs)):
+        
+        layer_name = 'new_action_output%d' % (old_action_output_index + 1,) 
+        
+        new_action_output = Dense(5, activation='softmax', name=layer_name)(old_action_outputs[old_action_output_index])
+        new_outputs.append(new_action_output)
+        
+    modified_model = Model(full_model.input, new_outputs, name="modified_SPNet")
+
+    return modified_model
 
 def compile_split_models(full_model, cfg, optimizer,
         pose_trainable=False,
