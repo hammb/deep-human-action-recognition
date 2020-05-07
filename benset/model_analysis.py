@@ -60,7 +60,7 @@ num_action_predictions = \
 """Build the full model"""
 full_model = spnet.build(cfg)
 full_model.summary()
-plot_model(full_model, to_file='model.png')
+plot_model(full_model, to_file='output\model.png')
 
 #num_actions = 5
 #modified_model = modify_model(full_model, cfg, num_actions)
