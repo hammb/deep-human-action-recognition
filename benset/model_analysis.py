@@ -60,7 +60,8 @@ num_action_predictions = \
 """Build the full model"""
 full_model = spnet.build(cfg)
 
-modified_model = modify_model(full_model, cfg, interlaced=False)
+num_actions = 5
+modified_model = modify_model(full_model, cfg, num_actions)
 
 modified_model.summary()
 

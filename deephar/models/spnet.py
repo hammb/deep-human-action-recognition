@@ -457,7 +457,7 @@ def split_model(full_model, cfg, interlaced=False, model_names=[None, None]):
 
     return [modelp, modela]
 
-def modify_model(full_model, cfg, interlaced=False, model_names=[None, None]):
+def modify_model(full_model, cfg, num_actions):
 
     num_pose_pred = get_num_predictions(cfg.num_pyramids, cfg.num_levels)
     num_act_pred = get_num_predictions(len(cfg.action_pyramids), cfg.num_levels)
@@ -474,7 +474,7 @@ def modify_model(full_model, cfg, interlaced=False, model_names=[None, None]):
         
         layer_name = 'new_action_output%d' % (old_action_output_index + 1,) 
         
-        new_action_output = Dense(5, activation='softmax', name=layer_name)(old_action_outputs[old_action_output_index])
+        new_action_output = Dense(num_actions, activation='softmax', name=layer_name)(old_action_outputs[old_action_output_index])
         new_outputs.append(new_action_output)
         
     modified_model = Model(full_model.input, new_outputs, name="modified_SPNet")
