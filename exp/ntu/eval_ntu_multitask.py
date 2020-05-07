@@ -1,6 +1,6 @@
 import os
 import sys
-
+os.environ['PATH'] = os.environ['PATH']+';'+os.environ['CONDA_PREFIX']+r"\Library\bin\graphviz"
 #if os.path.realpath(os.getcwd()) != os.path.dirname(os.path.realpath(__file__)):
 #    sys.path.append(os.getcwd())
 
@@ -32,7 +32,7 @@ if len(sys.argv) > 1:
     mkdir(logdir)
     sys.stdout = open(str(logdir) + '/log.txt', 'w')
 
-num_frames = 8
+num_frames = 6
 cfg = ModelConfig((num_frames,) + ntu_dataconf.input_shape, pa17j3d,
         num_actions=[60], num_pyramids=2, action_pyramids=[1, 2],
         num_levels=4, pose_replica=False,
@@ -55,7 +55,7 @@ full_model = spnet.build(cfg)
 """Load pre-trained weights from pose estimation and copy replica layers."""
 full_model.load_weights(
         # 'output/ntu_spnet_trial-03-ft_replica_0ae2bf7/weights_3dp+ntu_ar_062.hdf5',
-        'output/weights_3dp+ntu_ar_030.hdf5',
+        "E:\\Bachelorarbeit-SS20\\weights\\deephar\\output\\spnet\\0429\\weights_3dp+ntu_ar_048.hdf5",
         by_name=True)
 
 """Split model to simplify evaluation."""

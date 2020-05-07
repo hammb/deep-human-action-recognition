@@ -73,8 +73,8 @@ model.load_weights(weights_path)
 kinect = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Color)
 
 """Start capturing and prediction"""
-
-
+size = (1080,1080)
+img_array = []
 while True: 
     
     # --- Getting frames and drawing
@@ -317,7 +317,7 @@ while True:
             y2 = int(pred_x_y_1080[17][1])
             
             img_out = cv2.line(img, (x1, y1), (x2, y2), (0,255,255), 2)
-        
+        img_array.append(img_out)
         cv2.imshow('Recording KINECT Video Stream', img_out)
         frame = None
         
@@ -329,5 +329,12 @@ while True:
     key = cv2.waitKey(1)
     if key == 27: 
         kinect.close()
+        
+        out = cv2.VideoWriter('merge_pose.avi',cv2.VideoWriter_fourcc(*'DIVX'), 15, size)
+        
+        for i in range(len(img_array)):
+            out.write(img_array[i])
+        out.release()
+        
         cv2.destroyAllWindows()
         break

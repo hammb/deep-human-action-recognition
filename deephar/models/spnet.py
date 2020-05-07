@@ -20,7 +20,6 @@ from .common import concat_tensorlist
 from .common import set_trainable_layers
 from .common import copy_replica_layers
 
-
 def prediction_branch(x, cfg, pred_activate=True, replica=None,
         forward_maps=True, name=None):
 
@@ -356,6 +355,7 @@ def build(cfg, stop_grad_stem=False):
     """Sequential Pyramid Networks for 3D human pose estimation and
     action recognition.
     """
+
     assert type(cfg) == ModelConfig, \
             'type(cfg) ({}) is not ModelConfig'.format(type(cfg))
 

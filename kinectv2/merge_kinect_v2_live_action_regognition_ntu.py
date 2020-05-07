@@ -119,7 +119,7 @@ while True:
     
     # --- Getting frames and drawing
     if kinect.has_new_color_frame():
-        #start_time = time.time() # start time of the loop
+        
         
         frame = kinect.get_last_color_frame()
         
@@ -163,50 +163,18 @@ while True:
         #normalize
         img_256_norm = cv2.normalize(img_256, None, -1, 1, cv2.NORM_MINMAX, cv2.CV_64F)
         
-        
-        #img = T(Image.fromarray(framefullcolour))
-        
-        #w, h = (img.size[0], img.size[1])
-                    
-        #bbox = objposwin_to_bbox(np.array([w / 2, h / 2]), (dconf['scale']*max(w, h), dconf['scale']*max(w, h)))
-                    
-        #objpos, winsize = bbox_to_objposwin(bbox)
-              
-        #if min(winsize) < 32:
-        #    winsize = (32, 32)
-        
-        #objpos += dconf['scale'] * np.array([dconf['transx'], dconf['transy']])
-        
-        #img.rotate_crop(dconf['angle'], objpos, winsize)
-        #img.resize(pennaction_dataconf.crop_resolution)
-        #img.normalize_affinemap()
-        # normalize_channels(img.asarray(), channel_power=dconf['chpower'])
         frames[frame_counter-1, :, :, :] = img_256_norm
-        
-        #resize to 256x256
-        #img_256 = cv2.resize(framefullcolour, (256,256), interpolation = cv2.INTER_AREA)
-        #frames = np.squeeze(frames, axis=0)
-        #normalize
-        #img_256_norm = cv2.normalize(img_256, None, -1, 1, cv2.NORM_MINMAX, cv2.CV_64F)
-        #framefullcolour.show()
-        #input_data.append(img)
         
         frame = None
         
-        #print("FPS: ", 1.0 / (time.time() - start_time)) # FPS = 1 / time to process loop
-    
     if frame_counter == num_frames:
         
-        #frames = np.squeeze(frames, axis=0)
-        #expand Dimension and Predict
         prediction = model.predict(np.expand_dims(frames, axis=0))
         end_pred = np.ones(60)
         for blocks in prediction:
             end_pred *= blocks[0]
         
-        #print("--------------------------------")
-        #print(action_labels[np.argmax(prediction[-1])])
-        #print("--------------------------------")
+        
         frames = np.zeros((num_frames,) + pennaction_dataconf.input_shape)
         frame_counter = 0
         input_data = []
