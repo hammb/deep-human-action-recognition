@@ -12,7 +12,7 @@ from pykinect2.PyKinectV2 import *
 from pykinect2 import PyKinectRuntime
 
 
-def capture(num_seq, duration_of_time_between_capture, duration, action, cam):
+def capture(sequence,num_seq, duration_of_time_between_capture, duration, action, cam):
 
     assert num_seq > 0, \
         "Number of Sequneces has to be > 0"
@@ -35,7 +35,7 @@ def capture(num_seq, duration_of_time_between_capture, duration, action, cam):
     
     helper = 1 #create directory at first run
     
-    sequence = 0
+    
     start_time = 0
     frame_counter = 0
     winsound.Beep(frequency, duration_of_time_between_capture)
@@ -85,13 +85,14 @@ def capture(num_seq, duration_of_time_between_capture, duration, action, cam):
             
             
             cv2.imwrite("E:\\Bachelorarbeit-SS20\\datasets\\Benset\\frames\\" + directory + "\\%05d.jpg" % (frame_counter), img) 
-            print (frame_counter)
+            
             frame_counter = frame_counter + 1
             frame = None
             
             
         
         if int((start_time + (duration/1000))) == int(time.time()):
+            print (sequence)
             helper = 1 #create directory at first run
             start_time = 0
             frame_counter = 0
@@ -109,5 +110,6 @@ kinect = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Color)
 #Starts at next full minute
 while True:
     if (int(time.time()) % 60 == 0):
-        capture(5, 3000, 3000, 0, 0)
+        capture(614, 700 , 10000, 10000, 1, 0)
+        winsound.Beep(1000, 1000)
         break
