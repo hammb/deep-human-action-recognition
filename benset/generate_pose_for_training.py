@@ -68,252 +68,239 @@ weights_path = get_file(weights_file, TF_WEIGHTS_PATH, md5_hash=md5_hash,
         cache_subdir='models')
 model.load_weights(weights_path)
 
-def save_test_sample(input,prediction,dataset_index):
+def save_test_sample(input,prediction, sequences, i):
     
     
-    for ind in range(3):
+    img = input[0][10]
+    #img = cv2.resize(img, (500,500), interpolation = cv2.INTER_AREA)
+    img = np.interp(img, (-1, 1), (0, 255))
+    img = np.uint16(img)
+            
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            
+    pred_x_y_z_1 = prediction[6][i]
+
+    pred_x_y_1 = pred_x_y_z_1[:,0:2]
+    pred_x_y_1080 = np.interp(pred_x_y_1, (0, 1), (0, 256))
     
-        if ind == 0:
-            img = input[0][0]
-            i = 0
-        
-        if ind == 1:
-            img = input[0][10]
-            i = 10
+    joints = []
+    for x in prediction[7][i]:
+        if x[0] > 0.5:
+            joints.append(1)
+        else:
+            joints.append(0)
+         
+    index = 0
+    for x in pred_x_y_1080:
+        if prediction[7][i][index][0] > 0.5:  
+            img_out = cv2.circle(img, (int(x[0]), int(x[1])), 6, (0, 0, 255), -1)
             
-        if ind == 2:
-            img = input[0][19]
-            i = 19
+        index = index + 1
+    
+    
+    #Wirbelsäule
+    if joints[3] and joints[2]:
+        x1 = int(pred_x_y_1080[3][0])
+        y1 = int(pred_x_y_1080[3][1])
         
+        x2 = int(pred_x_y_1080[2][0])
+        y2 = int(pred_x_y_1080[2][1])
+        
+        img_out = cv2.line(img, (x1, y1), (x2, y2), (0,255,0), 2)
+    
+    if joints[2] and joints[1]:
+        x1 = int(pred_x_y_1080[2][0])
+        y1 = int(pred_x_y_1080[2][1])
+        
+        x2 = int(pred_x_y_1080[1][0])
+        y2 = int(pred_x_y_1080[1][1])
+        
+        img_out = cv2.line(img, (x1, y1), (x2, y2), (0,255,0), 2)
+        
+    if joints[1] and joints[0]:
+        x1 = int(pred_x_y_1080[1][0])
+        y1 = int(pred_x_y_1080[1][1])
+        
+        x2 = int(pred_x_y_1080[0][0])
+        y2 = int(pred_x_y_1080[0][1])
+        
+        img_out = cv2.line(img, (x1, y1), (x2, y2), (0,255,0), 2)
+        
+    #linker Arm
+    
+    if joints[4] and joints[1]:
+        x1 = int(pred_x_y_1080[1][0])
+        y1 = int(pred_x_y_1080[1][1])
+        
+        x2 = int(pred_x_y_1080[4][0])
+        y2 = int(pred_x_y_1080[4][1])
+        
+        img_out = cv2.line(img, (x1, y1), (x2, y2), (255,0,0), 2)
+        
+    if joints[4] and joints[6]:
+        x1 = int(pred_x_y_1080[6][0])
+        y1 = int(pred_x_y_1080[6][1])
+        
+        x2 = int(pred_x_y_1080[4][0])
+        y2 = int(pred_x_y_1080[4][1])
+        
+        img_out = cv2.line(img, (x1, y1), (x2, y2), (255,0,0), 2)
+    
+    if joints[6] and joints[8]:
+        x1 = int(pred_x_y_1080[6][0])
+        y1 = int(pred_x_y_1080[6][1])
+        
+        x2 = int(pred_x_y_1080[8][0])
+        y2 = int(pred_x_y_1080[8][1])
+        
+        img_out = cv2.line(img, (x1, y1), (x2, y2), (255,0,0), 2)
+    
+    if joints[10] and joints[8]:
+        x1 = int(pred_x_y_1080[8][0])
+        y1 = int(pred_x_y_1080[8][1])
+        
+        x2 = int(pred_x_y_1080[10][0])
+        y2 = int(pred_x_y_1080[10][1])
+        
+        img_out = cv2.line(img, (x1, y1), (x2, y2), (0,0,0), 2)
+    
+    #Rechter Arm
+    
+    if joints[1] and joints[5]:
+        x1 = int(pred_x_y_1080[1][0])
+        y1 = int(pred_x_y_1080[1][1])
+        
+        x2 = int(pred_x_y_1080[5][0])
+        y2 = int(pred_x_y_1080[5][1])
+        
+        img_out = cv2.line(img, (x1, y1), (x2, y2), (0,0,255), 2)
+    
+    if joints[5] and joints[7]:
+        x1 = int(pred_x_y_1080[7][0])
+        y1 = int(pred_x_y_1080[7][1])
+        
+        x2 = int(pred_x_y_1080[5][0])
+        y2 = int(pred_x_y_1080[5][1])
+        
+        img_out = cv2.line(img, (x1, y1), (x2, y2), (0,0,255), 2)
+    
+    if joints[7] and joints[9]:
+        x1 = int(pred_x_y_1080[7][0])
+        y1 = int(pred_x_y_1080[7][1])
+        
+        x2 = int(pred_x_y_1080[9][0])
+        y2 = int(pred_x_y_1080[9][1])
+        
+        img_out = cv2.line(img, (x1, y1), (x2, y2), (0,0,255), 2)
+        
+        
+    if joints[11] and joints[9]:
+        x1 = int(pred_x_y_1080[1][0])
+        y1 = int(pred_x_y_1080[11][1])
+        
+        x2 = int(pred_x_y_1080[9][0])
+        y2 = int(pred_x_y_1080[9][1])
+        
+        img_out = cv2.line(img, (x1, y1), (x2, y2), (0,0,255), 2)
+    
+    #Hüfte
+    
+    if joints[0] and joints[13]:
+        x1 = int(pred_x_y_1080[0][0])
+        y1 = int(pred_x_y_1080[0][1])
+        
+        x2 = int(pred_x_y_1080[13][0])
+        y2 = int(pred_x_y_1080[13][1])
+        
+        img_out = cv2.line(img, (x1, y1), (x2, y2), (255,255,255), 2)
+        
+    if joints[0] and joints[12]:
+        x1 = int(pred_x_y_1080[0][0])
+        y1 = int(pred_x_y_1080[0][1])
+        
+        x2 = int(pred_x_y_1080[12][0])
+        y2 = int(pred_x_y_1080[12][1])
+        
+        img_out = cv2.line(img, (x1, y1), (x2, y2), (255,255,255), 2)
+        
+        
+    #Linkes Bein
+    if joints[14] and joints[12]:
+        x1 = int(pred_x_y_1080[14][0])
+        y1 = int(pred_x_y_1080[14][1])
+        
+        x2 = int(pred_x_y_1080[12][0])
+        y2 = int(pred_x_y_1080[12][1])
+        
+        img_out = cv2.line(img, (x1, y1), (x2, y2), (255,255,0), 2)
+        
+    if joints[16] and joints[14]:
+        x1 = int(pred_x_y_1080[16][0])
+        y1 = int(pred_x_y_1080[16][1])
+        
+        x2 = int(pred_x_y_1080[14][0])
+        y2 = int(pred_x_y_1080[14][1])
+        
+        img_out = cv2.line(img, (x1, y1), (x2, y2), (255,255,0), 2)
+        
+    if joints[18] and joints[16]:
+        x1 = int(pred_x_y_1080[18][0])
+        y1 = int(pred_x_y_1080[18][1])
+        
+        x2 = int(pred_x_y_1080[16][0])
+        y2 = int(pred_x_y_1080[16][1])
+        
+        img_out = cv2.line(img, (x1, y1), (x2, y2), (255,255,0), 2)
         
     
-        img = cv2.resize(img, (1080,1080), interpolation = cv2.INTER_AREA)
-        img = np.interp(img, (-1, 1), (0, 255))
-        img = np.uint16(img)
-                
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-                
-        pred_x_y_z_1 = prediction[6][i]
+    #Rechtes Bein
+    if joints[13] and joints[15]:
+        x1 = int(pred_x_y_1080[15][0])
+        y1 = int(pred_x_y_1080[15][1])
+        
+        x2 = int(pred_x_y_1080[13][0])
+        y2 = int(pred_x_y_1080[13][1])
+        
+        img_out = cv2.line(img, (x1, y1), (x2, y2), (0,255,255), 2)
+        
+    if joints[17] and joints[15]:
+        x1 = int(pred_x_y_1080[17][0])
+        y1 = int(pred_x_y_1080[17][1])
+        
+        x2 = int(pred_x_y_1080[15][0])
+        y2 = int(pred_x_y_1080[15][1])
+        
+        img_out = cv2.line(img, (x1, y1), (x2, y2), (0,255,255), 2)
+        
+    if joints[19] and joints[17]:
+        x1 = int(pred_x_y_1080[19][0])
+        y1 = int(pred_x_y_1080[19][1])
+        
+        x2 = int(pred_x_y_1080[17][0])
+        y2 = int(pred_x_y_1080[17][1])
+        
+        img_out = cv2.line(img, (x1, y1), (x2, y2), (0,255,255), 2)
+        
     
-        pred_x_y_1 = pred_x_y_z_1[:,0:2]
-        pred_x_y_1080 = np.interp(pred_x_y_1, (0, 1), (0, 1080))
-        
-        joints = []
-        for x in prediction[7][i]:
-            if x[0] > 0.5:
-                joints.append(1)
-            else:
-                joints.append(0)
-             
-        index = 0
-        for x in pred_x_y_1080:
-            if prediction[7][i][index][0] > 0.5:  
-                img_out = cv2.circle(img, (int(x[0]), int(x[1])), 6, (0, 0, 255), -1)
-                
-            index = index + 1
-        
-        
-        #Wirbelsäule
-        if joints[3] and joints[2]:
-            x1 = int(pred_x_y_1080[3][0])
-            y1 = int(pred_x_y_1080[3][1])
-            
-            x2 = int(pred_x_y_1080[2][0])
-            y2 = int(pred_x_y_1080[2][1])
-            
-            img_out = cv2.line(img, (x1, y1), (x2, y2), (0,255,0), 2)
-        
-        if joints[2] and joints[1]:
-            x1 = int(pred_x_y_1080[2][0])
-            y1 = int(pred_x_y_1080[2][1])
-            
-            x2 = int(pred_x_y_1080[1][0])
-            y2 = int(pred_x_y_1080[1][1])
-            
-            img_out = cv2.line(img, (x1, y1), (x2, y2), (0,255,0), 2)
-            
-        if joints[1] and joints[0]:
-            x1 = int(pred_x_y_1080[1][0])
-            y1 = int(pred_x_y_1080[1][1])
-            
-            x2 = int(pred_x_y_1080[0][0])
-            y2 = int(pred_x_y_1080[0][1])
-            
-            img_out = cv2.line(img, (x1, y1), (x2, y2), (0,255,0), 2)
-            
-        #linker Arm
-        
-        if joints[4] and joints[1]:
-            x1 = int(pred_x_y_1080[1][0])
-            y1 = int(pred_x_y_1080[1][1])
-            
-            x2 = int(pred_x_y_1080[4][0])
-            y2 = int(pred_x_y_1080[4][1])
-            
-            img_out = cv2.line(img, (x1, y1), (x2, y2), (255,0,0), 2)
-            
-        if joints[4] and joints[6]:
-            x1 = int(pred_x_y_1080[6][0])
-            y1 = int(pred_x_y_1080[6][1])
-            
-            x2 = int(pred_x_y_1080[4][0])
-            y2 = int(pred_x_y_1080[4][1])
-            
-            img_out = cv2.line(img, (x1, y1), (x2, y2), (255,0,0), 2)
-        
-        if joints[6] and joints[8]:
-            x1 = int(pred_x_y_1080[6][0])
-            y1 = int(pred_x_y_1080[6][1])
-            
-            x2 = int(pred_x_y_1080[8][0])
-            y2 = int(pred_x_y_1080[8][1])
-            
-            img_out = cv2.line(img, (x1, y1), (x2, y2), (255,0,0), 2)
-        
-        if joints[10] and joints[8]:
-            x1 = int(pred_x_y_1080[8][0])
-            y1 = int(pred_x_y_1080[8][1])
-            
-            x2 = int(pred_x_y_1080[10][0])
-            y2 = int(pred_x_y_1080[10][1])
-            
-            img_out = cv2.line(img, (x1, y1), (x2, y2), (0,0,0), 2)
-        
-        #Rechter Arm
-        
-        if joints[1] and joints[5]:
-            x1 = int(pred_x_y_1080[1][0])
-            y1 = int(pred_x_y_1080[1][1])
-            
-            x2 = int(pred_x_y_1080[5][0])
-            y2 = int(pred_x_y_1080[5][1])
-            
-            img_out = cv2.line(img, (x1, y1), (x2, y2), (0,0,255), 2)
-        
-        if joints[5] and joints[7]:
-            x1 = int(pred_x_y_1080[7][0])
-            y1 = int(pred_x_y_1080[7][1])
-            
-            x2 = int(pred_x_y_1080[5][0])
-            y2 = int(pred_x_y_1080[5][1])
-            
-            img_out = cv2.line(img, (x1, y1), (x2, y2), (0,0,255), 2)
-        
-        if joints[7] and joints[9]:
-            x1 = int(pred_x_y_1080[7][0])
-            y1 = int(pred_x_y_1080[7][1])
-            
-            x2 = int(pred_x_y_1080[9][0])
-            y2 = int(pred_x_y_1080[9][1])
-            
-            img_out = cv2.line(img, (x1, y1), (x2, y2), (0,0,255), 2)
-            
-            
-        if joints[11] and joints[9]:
-            x1 = int(pred_x_y_1080[1][0])
-            y1 = int(pred_x_y_1080[11][1])
-            
-            x2 = int(pred_x_y_1080[9][0])
-            y2 = int(pred_x_y_1080[9][1])
-            
-            img_out = cv2.line(img, (x1, y1), (x2, y2), (0,0,255), 2)
-        
-        #Hüfte
-        
-        if joints[0] and joints[13]:
-            x1 = int(pred_x_y_1080[0][0])
-            y1 = int(pred_x_y_1080[0][1])
-            
-            x2 = int(pred_x_y_1080[13][0])
-            y2 = int(pred_x_y_1080[13][1])
-            
-            img_out = cv2.line(img, (x1, y1), (x2, y2), (255,255,255), 2)
-            
-        if joints[0] and joints[12]:
-            x1 = int(pred_x_y_1080[0][0])
-            y1 = int(pred_x_y_1080[0][1])
-            
-            x2 = int(pred_x_y_1080[12][0])
-            y2 = int(pred_x_y_1080[12][1])
-            
-            img_out = cv2.line(img, (x1, y1), (x2, y2), (255,255,255), 2)
-            
-            
-        #Linkes Bein
-        if joints[14] and joints[12]:
-            x1 = int(pred_x_y_1080[14][0])
-            y1 = int(pred_x_y_1080[14][1])
-            
-            x2 = int(pred_x_y_1080[12][0])
-            y2 = int(pred_x_y_1080[12][1])
-            
-            img_out = cv2.line(img, (x1, y1), (x2, y2), (255,255,0), 2)
-            
-        if joints[16] and joints[14]:
-            x1 = int(pred_x_y_1080[16][0])
-            y1 = int(pred_x_y_1080[16][1])
-            
-            x2 = int(pred_x_y_1080[14][0])
-            y2 = int(pred_x_y_1080[14][1])
-            
-            img_out = cv2.line(img, (x1, y1), (x2, y2), (255,255,0), 2)
-            
-        if joints[18] and joints[18]:
-            x1 = int(pred_x_y_1080[18][0])
-            y1 = int(pred_x_y_1080[18][1])
-            
-            x2 = int(pred_x_y_1080[16][0])
-            y2 = int(pred_x_y_1080[16][1])
-            
-            img_out = cv2.line(img, (x1, y1), (x2, y2), (255,255,0), 2)
-            
-        
-        #Rechtes Bein
-        if joints[13] and joints[15]:
-            x1 = int(pred_x_y_1080[15][0])
-            y1 = int(pred_x_y_1080[15][1])
-            
-            x2 = int(pred_x_y_1080[13][0])
-            y2 = int(pred_x_y_1080[13][1])
-            
-            img_out = cv2.line(img, (x1, y1), (x2, y2), (0,255,255), 2)
-            
-        if joints[17] and joints[15]:
-            x1 = int(pred_x_y_1080[17][0])
-            y1 = int(pred_x_y_1080[17][1])
-            
-            x2 = int(pred_x_y_1080[15][0])
-            y2 = int(pred_x_y_1080[15][1])
-            
-            img_out = cv2.line(img, (x1, y1), (x2, y2), (0,255,255), 2)
-            
-        if joints[19] and joints[17]:
-            x1 = int(pred_x_y_1080[19][0])
-            y1 = int(pred_x_y_1080[19][1])
-            
-            x2 = int(pred_x_y_1080[17][0])
-            y2 = int(pred_x_y_1080[17][1])
-            
-            img_out = cv2.line(img, (x1, y1), (x2, y2), (0,255,255), 2)
-            
-        
-        cv2.imwrite("E:\\Bachelorarbeit-SS20\\datasets\\TestBenset\\S%05dB%05d.jpg" % (dataset_index,ind), img_out)
-        
+    cv2.imwrite("E:\\Bachelorarbeit-SS20\\datasets\\Benset256Test\\" + sequences + "F%05d.jpg" % i, img_out)
+    
     
 
 
 """Load Benset dataset."""
-benset = Benset("E:\\Bachelorarbeit-SS20\\datasets\\Benset")
+benset = Benset("E:\\Bachelorarbeit-SS20\\datasets\\Benset256")
 
 
-benset_seq = BatchLoader(benset, benset.get_dataset(),[0,0],4,num_frames)
+benset_seq = BatchLoader(benset, benset.get_dataset(),[0,0],20,num_frames)
 
 x_batch = benset_seq.__next__()
 
 sequences = benset.get_dataset()
 dataset_index = 0 
 poses_of_sequence = []
+joint_probs = []
 all_poses = {}
+all_joint_probs = {}
 
 run = True
 while run:
@@ -336,27 +323,36 @@ while run:
             if i == (range(len(frame_lists)).stop - 1):
                 if len(x_batch[index][0]) % 20 == 0:
                     poses_of_sequence.extend(prediction[6])
+                    joint_probs.extend(prediction[7])
                 else:
                     poses_of_sequence.extend(prediction[6][-last_range_size:])
+                    joint_probs.extend(prediction[7][-last_range_size:])
             else:
                 poses_of_sequence.extend(prediction[6])
+                joint_probs.extend(prediction[7])
                 
             
-        save_test_sample(input,prediction,dataset_index)
+            #save_test_sample(input,prediction,sequences[dataset_index],i)
             
         all_poses.update({sequences[dataset_index]:poses_of_sequence})
+        all_joint_probs.update({sequences[dataset_index]:joint_probs})
+        
         poses_of_sequence = []
+        joint_probs = []
         dataset_index = dataset_index + 1
+        print(dataset_index)
         index = index + 1
-    test = x_batch
-    #x_batch = benset_seq.__next__()
     
-    x_batch = None
+    x_batch = benset_seq.__next__()
+    
     if x_batch == None:
         run = False
 
-with open("E:\\Bachelorarbeit-SS20\\datasets\\TestBenset\\poses.p", 'wb') as fp:
+with open("E:\\Bachelorarbeit-SS20\\datasets\\Benset256Test\\poses.p", 'wb') as fp:
     pickle.dump(all_poses, fp, protocol=pickle.HIGHEST_PROTOCOL)
+    
+with open("E:\\Bachelorarbeit-SS20\\datasets\\Benset256Test\\poses_prob.p", 'wb') as fp:
+    pickle.dump(all_joint_probs, fp, protocol=pickle.HIGHEST_PROTOCOL)
     
 """
 with open("E:\\Bachelorarbeit-SS20\\datasets\\TestBenset\\poses.p", 'rb') as fp:

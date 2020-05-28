@@ -123,7 +123,7 @@ class BatchLoader(Sequence):
     
     def __next__(self):
         
-        if self.batch_index <= self.__len__():
+        if self.batch_index < self.__len__():
             batch = self.__getitem__(self.batch_index)
         else:
             batch = None
