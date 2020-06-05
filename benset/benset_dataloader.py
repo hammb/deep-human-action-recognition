@@ -4,9 +4,15 @@ import pickle
 import numpy.random as npr
 
 class Benset(object):
-    def __init__(self, dataset_path, dataset_structure_file_path=None, adjust_dataset_structure=False, test_data_file_path=None):
+    def __init__(self, dataset_path, pose_predictons_path, dataset_structure_file_path=None, adjust_dataset_structure=False, test_data_file_path=None):
+        
+        self.test_annotations = {}
+        self.train_annotations = {}
         
         self.dataset_path = dataset_path
+        
+        with open(pose_predictons_path, 'rb') as fp:
+            self.pose_predictons = pickle.load(fp)
         
         if dataset_structure_file_path is None:  
             
@@ -23,7 +29,13 @@ class Benset(object):
             num_clips_per_recording = 100
             num_cams = 2
             
+            #TODO ANNOTATIONEN
+            
+            #self.dataset_annotations = self.pose_predictons
+            #self.train_annotations = self.pose_predictons
+            
             self.generate_dataset_structure(num_sequences, num_cams, num_clips_per_recording)
+            
         else:
             with open(dataset_structure_file_path, 'rb') as fp:
                 annotation_file = pickle.load(fp)
@@ -33,7 +45,7 @@ class Benset(object):
                 self.adjust_dataset_structure(annotation_file, test_data_file_path)
             else:
                 self.dataset_structure = annotation_file
-            
+                #TODO ANNOTATIONEN
         
     def generate_dataset_structure(self, num_sequences, num_cams, num_clips_per_recording):
         
@@ -95,6 +107,10 @@ class Benset(object):
                     
         self.train_data = train_data
         self.test_data = test_data
+        
+        #for sequence in test_data:
+        #    self.train_annotations.pop(sequence)
+            
     
     def get_dataset_length(self):
         
@@ -128,7 +144,20 @@ class Benset(object):
         
         return self.dataset_path
     
+    def get_dataset_annotations(self):
+        
+        return self.dataset_annotations
+    
+    def get_train_annotations(self):
+        
+        return self.train_annotations
+    
+    def get_test_annotations(self):
+        
+        return self.test_annotations
+    
     def adjust_dataset_structure(self, dataset_structure, test_data_file_path=None):
+        
         
         countA0 = []
         countA1 = []
@@ -191,6 +220,12 @@ class Benset(object):
             
             self.test_data = test_data_file
         
+        #self.test_annotations = self.pose_predictons
+        #self.train_annotations = self.pose_predictons
+        
+        for sequences in self.test_data:
+            self.test_annotations.update({sequences:self.pose_predictons[]})
+        
         for test_sequence in self.test_data:
             
             a = all_seqences_unabridged.index(test_sequence)
@@ -204,5 +239,5 @@ class Benset(object):
         
         
     def shuffle_train_data(self):
-        self.test_data = random.choices(self.pool_of_train_data, k=len(self.test_data))
-        random.shuffle(self.test_data)
+        self.train_data = random.choices(self.pool_of_train_data, k=len(self.train_data))
+        random.shuffle(self.train_data)

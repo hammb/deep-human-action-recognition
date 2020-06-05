@@ -51,7 +51,7 @@ def capture(sequence,num_seq, duration_of_time_between_capture, duration, action
                 directory = "S%05dC%05dA%05d" % (sequence, cam, action)
                 
                 try:
-                    os.mkdir("E:\\Bachelorarbeit-SS20\\datasets\\Benset\\frames\\" + directory)
+                    os.mkdir("E:\\Bachelorarbeit-SS20\\datasets\\Benset256_testdataset\\frames\\" + directory)
                 except:
                     print("Directory '" + directory + "' already exists in this path")
                 
@@ -83,8 +83,11 @@ def capture(sequence,num_seq, duration_of_time_between_capture, duration, action
             
             img = img[y:y+h, x:x+w]
             
-            
-            cv2.imwrite("E:\\Bachelorarbeit-SS20\\datasets\\Benset\\frames\\" + directory + "\\%05d.jpg" % (frame_counter), img) 
+            img_256 = cv2.resize(img, (256,256), interpolation = cv2.INTER_AREA)
+        
+            img_256 = cv2.cvtColor(img_256, cv2.COLOR_BGR2RGB)
+        
+            cv2.imwrite("E:\\Bachelorarbeit-SS20\\datasets\\Benset256_testdataset\\frames\\" + directory + "\\%05d.jpg" % (frame_counter), img) 
             
             frame_counter = frame_counter + 1
             frame = None
@@ -110,6 +113,6 @@ kinect = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Color)
 #Starts at next full minute
 while True:
     if (int(time.time()) % 60 == 0):
-        capture(614, 700 , 10000, 10000, 1, 0)
+        capture(0, 50, 10000, 5000, 2, 0)
         winsound.Beep(1000, 1000)
         break

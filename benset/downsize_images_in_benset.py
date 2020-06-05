@@ -3,7 +3,7 @@ import cv2
 
 dataset_structure = {}
 counter = 0
-dataset_path = "E:\\Bachelorarbeit-SS20\\datasets\\Benset"
+dataset_path = "E:\\Bachelorarbeit-SS20\\datasets\\Benset256"
 
 for root, dirs, files in os.walk(os.path.join(os.getcwd(), dataset_path)):
     
@@ -24,7 +24,7 @@ for root, dirs, files in os.walk(os.path.join(os.getcwd(), dataset_path)):
 for sequence in seq_structure:
     
     try:
-        os.mkdir("E:\\Bachelorarbeit-SS20\\datasets\\Benset256\\frames\\" + sequence)
+        os.mkdir("E:\\Bachelorarbeit-SS20\\datasets\\Benset256_green\\frames\\" + sequence)
     except:
         print("Directory '" + sequence + "' already exists in this path")
     

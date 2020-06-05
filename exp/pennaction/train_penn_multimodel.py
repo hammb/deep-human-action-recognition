@@ -1,8 +1,8 @@
 import os
 import sys
 
-if os.path.realpath(os.getcwd()) != os.path.dirname(os.path.realpath(__file__)):
-    sys.path.append(os.getcwd())
+#if os.path.realpath(os.getcwd()) != os.path.dirname(os.path.realpath(__file__)):
+#    sys.path.append(os.getcwd())
 
 import deephar
 
@@ -27,7 +27,7 @@ from deephar.models import spnet
 from deephar.utils import *
 
 sys.path.append(os.path.join(os.getcwd(), 'exp/common'))
-from datasetpath import datasetpath
+#from datasetpath import datasetpath
 
 from mpii_tools import MpiiEvalCallback
 from penn_tools import PennActionEvalCallback
@@ -62,7 +62,7 @@ mpii = MpiiSinglePerson(datasetpath('MPII'), dataconf=mpii_dataconf,
 penn_sf = PennAction(datasetpath('Penn_Action'), pennaction_pe_dataconf,
         poselayout=pa16j2d, topology='frames', use_gt_bbox=True)
 
-penn_seq = PennAction(datasetpath('Penn_Action'), pennaction_dataconf,
+penn_seq = PennAction("E:\\Bachelorarbeit-SS20\\datasets\\PennAction", pennaction_dataconf,
         poselayout=pa16j2d, topology='sequences', use_gt_bbox=True,
         clip_size=num_frames)
 

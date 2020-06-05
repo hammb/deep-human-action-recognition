@@ -44,10 +44,10 @@ if len(sys.argv) > 1:
     mkdir(logdir)
     sys.stdout = open(str(logdir) + '/log.txt', 'w')
 
-num_frames = 6
+num_frames = 8
 cfg = ModelConfig((num_frames,) + ntu_dataconf.input_shape, pa17j3d,
         # num_actions=[60], num_pyramids=8, action_pyramids=[5, 6, 7, 8],
-        num_actions=[60], num_pyramids=2, action_pyramids=[1, 2],
+        num_actions=[4], num_pyramids=2, action_pyramids=[1, 2],
         num_levels=4, pose_replica=False,
         num_pose_features=192, num_visual_features=192)
 
@@ -60,7 +60,7 @@ action_weight = 0.1
 #batch_size_mpii = 3
 #batch_size_h36m = 4
 #batch_size_ntu = 6 #1
-batch_clips = 3 # 8/4
+batch_clips = 1 # 8/4
 
 
 """Build the full model"""
@@ -68,14 +68,26 @@ full_model = spnet.build(cfg)
 
 """Load pre-trained weights from pose estimation and copy replica layers."""
 full_model.load_weights(
-         "E:\\Bachelorarbeit-SS20\\weights\\deephar\\output\\spnet\\0429\\weights_3dp+ntu_ar_048.hdf5",
+         "E:\\Bachelorarbeit-SS20\\weights\\deephar\\output\\spnet\\0530\\weights_3dp+benset_ar_035.hdf5",
          by_name=True)
 
 """Save model callback."""
 
-save_model = SaveModel(os.path.join("C:\\networks\\deephar\\output\\spnet\\0505\\",
+save_model = SaveModel(os.path.join("E:\\Bachelorarbeit-SS20\\weights\\deephar\\output\\spnet\\0601",
     'weights_3dp+benset_ar_{epoch:03d}.hdf5'), model_to_save=full_model)
 
+sys.path.append(os.path.join(os.getcwd(), 'benset')) 
+from benset_batchloader_ar import *
+from benset_dataloader_ar import *
+
+
+dataset_path="E:\\Bachelorarbeit-SS20\\datasets\\Benset256"
+num_action_predictions = 6
+benset = Benset(dataset_path, num_action_predictions)
+
+batch_size = 1
+
+benset_seq = BatchLoader(benset, benset.get_train_data_keys(),benset.get_train_annotations(),batch_size,num_frames, mode=1, random_hflip=1, random_brightness=1, random_channel_shift=0, random_zoom=1, random_subsampling=1, random_rot=1, random_blur=1)
 
 def prepare_training(pose_trainable, lr):
     optimizer = SGD(lr=lr, momentum=0.9, nesterov=True)
@@ -94,16 +106,18 @@ def prepare_training(pose_trainable, lr):
             # h36m_puvd_val[:,0,2], h36m_scam_val, h36m_action,
             # batch_size=1, eval_model=models[0], logdir=logdir)
 
-    ntu_callback = NtuEvalCallback(ntu_te, eval_model=models[1], logdir=logdir)
+    #ntu_callback = NtuEvalCallback(ntu_te, eval_model=models[1], logdir=logdir)
 
     def end_of_epoch_callback(epoch):
 
+        
         save_model.on_epoch_end(epoch)
+        
         # if epoch == 0 or epoch >= 50:
         # mpii_callback.on_epoch_end(epoch)
         # h36m_callback.on_epoch_end(epoch)
 
-        ntu_callback.on_epoch_end(epoch)
+        #ntu_callback.on_epoch_end(epoch)
 
         if epoch in [58, 70]:
             lr = float(K.get_value(optimizer.lr))
@@ -115,8 +129,8 @@ def prepare_training(pose_trainable, lr):
     return end_of_epoch_callback, models
 
 
-
-steps_per_epoch = ntu.get_length(TRAIN_MODE) // batch_clips
+#95153
+steps_per_epoch = len(benset.get_train_data_keys())
 
 fcallback, models = prepare_training(False, start_lr)
 # trainer = MultiModelTrainer(models[1:], [ar_data_tr], workers=8,
@@ -129,8 +143,45 @@ fcallback, models = prepare_training(False, start_lr)
 
 fcallback, models = prepare_training(True, 0.1*start_lr)
 # trainer = MultiModelTrainer(models, [pe_data_tr, ar_data_tr], workers=8,
-trainer = MultiModelTrainer(models, [pe_data_tr, ar_data_tr], workers=4,
+trainer = MultiModelTrainer([models[1]], [benset_seq], workers=4,
         print_full_losses=True)
-trainer.train(90, steps_per_epoch=steps_per_epoch, initial_epoch=20,
+trainer.train(20, steps_per_epoch=steps_per_epoch, initial_epoch=0,
         end_of_epoch_callback=fcallback)
 
+from sklearn.metrics import confusion_matrix
+y_actu = []
+y_pred = []
+from collections import Counter
+benset_test = BatchLoader(benset, benset.get_test_data_keys(),benset.get_test_annotations(),batch_size,num_frames)
+
+predictions = []
+
+#wrong = [0,0,0,0]
+
+while True:
+    
+    x, y = benset_test.__next__()
+    
+    if x is None:
+        break
+    
+    prediction = full_model.predict(x)
+    
+    pred_action = np.argmax(prediction[11])
+    annot_action = np.argmax(y[0])
+    
+    y_actu.append(annot_action)
+    y_pred.append(pred_action)
+    
+    if pred_action == annot_action:
+        predictions.append(1)
+    else:
+        wrong[annot_action] = wrong[annot_action] + 1
+        predictions.append(0)
+        
+    accuracy = 100.0 / len(predictions) * Counter(predictions)[1]
+    print("---")
+    print(accuracy)
+    print("---")
+
+conf_mat = confusion_matrix(y_actu, y_pred)
