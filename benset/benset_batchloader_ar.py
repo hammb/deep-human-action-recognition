@@ -28,7 +28,7 @@ class BatchLoader(Sequence):
             self.num_frames = num_frames
             self.batch_index = 0
             self.frame_list_index = 0
-            self.next = 1
+            self.next = int(time.time())
             self.frame_list = []
             self.mode = mode
             self.random_hflip = random_hflip
@@ -194,7 +194,7 @@ class BatchLoader(Sequence):
                     
                 
                     #normalize
-                    img_256_norm = cv2.normalize(img_256, None, -1, 1, cv2.NORM_MINMAX, cv2.CV_64F)
+                    #img_256_norm = cv2.normalize(img_256, None, -1, 1, cv2.NORM_MINMAX, cv2.CV_64F)
                         
                         
                     #restore RGB
@@ -206,7 +206,7 @@ class BatchLoader(Sequence):
                     #normalize
                     #img_256_norm = cv2.normalize(img_256, None, -1, 1, cv2.NORM_MINMAX, cv2.CV_64F)
                 
-                    sequence.append(img_256_norm)
+                    sequence.append(img_256)
                     i = i + 1
                 
                 sequence = np.expand_dims(sequence, axis=0)

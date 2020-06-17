@@ -8,10 +8,10 @@ import numpy as np
 import time
 
 class Benset(object):
-    def __init__(self, dataset_path, num_action_predictions, pose_predictons_path=None, dataset_structure_file_path=None, adjust_dataset_structure=False, test_data_file_path=None):
+    def __init__(self, dataset_path, num_action_predictions, pose_predictons_path=None, dataset_structure_file_path=None, adjust_dataset_structure=False, test_data_file_path=None, use_backgrounds=False):
         
         self.dataset_path = dataset_path
-        
+        self.use_backgrounds = use_backgrounds
         #700 Action 0
         #700 Action 1
         #700 Action 2
@@ -41,9 +41,10 @@ class Benset(object):
         
         self.dataset_structure = {}
         self.dataset_keys = {}
+        seq_structure = []
         counter = 0
         
-        for root, dirs, files in os.walk(os.path.join(os.getcwd(), self.dataset_path)):
+        for root, dirs, files in os.walk(os.path.join(os.path.join(os.getcwd(), self.dataset_path),"frames")):
            
             #Get names of sequences
             if dirs != []:
@@ -58,6 +59,24 @@ class Benset(object):
                     #Mapping of seqences and corresponding frames
                     self.dataset_structure[seq_structure[counter]] = files
                     counter += 1
+                    
+        if self.use_backgrounds:
+            self.backgrounds = []          
+            for root, dirs, files in os.walk(os.path.join(os.path.join(os.getcwd(), self.dataset_path),"backgrounds")):
+               
+                #Get names of sequences
+                if dirs != []:
+                    if len(dirs) > 1:
+                        seq_structure = dirs
+                        
+                    
+                #Get names of frames and picture sizes
+                if files != []:
+                    if len(files) > 1:
+                        
+                        #Mapping of seqences and corresponding frames
+                        self.backgrounds = files
+                        counter += 1
         
         #Split into test/val
         test_data = []
@@ -157,7 +176,11 @@ class Benset(object):
     def get_test_annotations(self):
         
         return self.test_annotations
+    
+    def get_backgrounds(self):
         
+        return self.backgrounds
+    
     def load_pictures(self):
         
         self.dataset = {}
