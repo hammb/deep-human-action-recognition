@@ -4,7 +4,7 @@
 
 Predicted Pose
 
-![Predictions_action](images/taking a selfie.PNG)
+![Predictions_action](images/taking_a_selfie.PNG)
 
 Predicted action (NTU Dataset)
 
