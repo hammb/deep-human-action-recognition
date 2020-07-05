@@ -17,11 +17,6 @@ Install required python packages before you continue:
 
 Benset is the name of the data set I created. But the Benset directory contains all necessary functions for recording video sequences with KinectV2 cameras, the necessary preprocessing of the videos, the automatic loading of the videos for Keras training purposes and all necessary training and evaluation scripts for training the Deephar network.
 
-## Public datasets
-
-We do not provide public datasets within this software. We only provide
-converted annotation files and some useful scripts for practical purposes.
-
 ### MPII
 
 Images from MPII should be manually downloaded and placed
