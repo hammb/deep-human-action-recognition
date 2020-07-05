@@ -3,7 +3,7 @@ import cv2
 
 dataset_structure = {}
 counter = 0
-dataset_path = "E:\\Bachelorarbeit-SS20\\datasets\\Benset256"
+dataset_path = "E:\\Bachelorarbeit-SS20\\datasets\\Benset256_testdataset"
 
 for root, dirs, files in os.walk(os.path.join(os.getcwd(), dataset_path)):
     
@@ -23,8 +23,12 @@ for root, dirs, files in os.walk(os.path.join(os.getcwd(), dataset_path)):
 
 for sequence in seq_structure:
     
+    dig = list(sequence)
+    dig[3] = str(8 + int(dig[3]))
+    new_sequence = "".join(dig)
+    
     try:
-        os.mkdir("E:\\Bachelorarbeit-SS20\\datasets\\Benset256_green\\frames\\" + sequence)
+        os.mkdir("E:\\Bachelorarbeit-SS20\\datasets\\Benset256_green\\frames\\" + new_sequence)
     except:
         print("Directory '" + sequence + "' already exists in this path")
     
@@ -41,10 +45,10 @@ for sequence in seq_structure:
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         
         #resize to 256x256
-        img_256 = cv2.resize(img, (256,256), interpolation = cv2.INTER_AREA)
+        #img_256 = cv2.resize(img, (256,256), interpolation = cv2.INTER_AREA)
         
-        img_256 = cv2.cvtColor(img_256, cv2.COLOR_BGR2RGB)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         
-        cv2.imwrite("E:\\Bachelorarbeit-SS20\\datasets\\Benset256\\frames\\" + sequence + "\\" + dataset_structure[sequence][frame_index], img_256)
+        cv2.imwrite("E:\\Bachelorarbeit-SS20\\datasets\\Benset256_green\\frames\\" + new_sequence + "\\" + dataset_structure[sequence][frame_index], img)
             
         

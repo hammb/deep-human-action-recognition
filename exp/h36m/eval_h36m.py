@@ -70,6 +70,6 @@ h36m_val = BatchLoader(h36m, ['frame'],
 printcn(OKBLUE, 'Preloading Human3.6M validation samples...')
 [x_val], [pw_val, puvd_val, afmat_val, scam_val, action] = h36m_val[0]
 
-eval_human36m_sc_error(model, x_val, pw_val, afmat_val, puvd_val[:,0,2],
+eval_human36m_sc_error(models[0], x_val, pw_val, afmat_val, puvd_val[:,0,2],
         scam_val, action, batch_size=24)
 

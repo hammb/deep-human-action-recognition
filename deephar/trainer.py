@@ -154,12 +154,12 @@ class MultiModelTrainer(object):
 
         batch_size = 0
         for i in range(len(models)):
-            assert isinstance(generators[i], BatchLoader), \
-                    'Only BatchLoader class is supported'
-            batch_size += generators[i].get_batch_size()
-            enqueuer = OrderedEnqueuer(generators[i], shuffle=shuffle)
-            enqueuer.start(workers=workers[i], max_queue_size=max_queue_size)
-            self.output_generators.append(enqueuer.get())
+            #assert isinstance(generators[i], BatchLoader), \
+            #        'Only BatchLoader class is supported'
+            batch_size += 1
+            #enqueuer = OrderedEnqueuer(generators[i], shuffle=shuffle)
+            #enqueuer.start(workers=workers[i], max_queue_size=max_queue_size)
+            self.output_generators.append(generators[i])
 
             metric_names.append('loss%d' % i)
             if self.print_full_losses:
@@ -189,14 +189,18 @@ class MultiModelTrainer(object):
             logger.on_epoch_begin(epoch)
 
             while step < steps_per_epoch:
-
+                
                 self.batch_logs['batch'] = batch
                 logger.on_batch_begin(batch, self.batch_logs)
 
                 for i in range(len(self.models)):
-                    x, y = next(self.output_generators[i])
+                    x, y = self.output_generators[i].__next__()
+                    
+                    if x is None:
+                        x, y = self.output_generators[i].__next__()
+                    
                     outs = self.models[i].train_on_batch(x, y)
-
+                    
                     if not isinstance(outs, list):
                         outs = [outs]
                     if self.print_full_losses:
@@ -205,6 +209,7 @@ class MultiModelTrainer(object):
                     else:
                         self.batch_logs[self.metric_names[i]] = outs[0]
 
+                
                 logger.on_batch_end(batch, self.batch_logs)
 
                 step += 1

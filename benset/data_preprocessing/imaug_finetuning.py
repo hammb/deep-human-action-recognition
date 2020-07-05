@@ -17,30 +17,47 @@ from benset_dataloader_ar import *
 
 
 dataset_path_green="E:\\Bachelorarbeit-SS20\\datasets\\Benset256_green"
-
+dataset_path="E:\\Bachelorarbeit-SS20\\datasets\\Benset256"
 
 num_action_predictions = 6
 use_backgrounds = True
 
+benset_dataloader = Benset(dataset_path_green, num_action_predictions,
+                      use_backgrounds=use_backgrounds)
 
-benset_green = Benset(dataset_path_green, num_action_predictions,use_backgrounds=use_backgrounds)
-
-batch_size = 1
+batch_size = 3
 num_frames = 8
 mode=1
 green_screen = 1
+augmentation = 1
 
-benset_seq = BatchLoader(dataloader=benset_green, x_set=benset_green.get_train_data_keys(),
-                         y_set=benset_green.get_train_annotations(),batch_size=batch_size,
-                         num_frames=num_frames,mode=mode,green_screen=green_screen, backgrounds=benset_green.get_backgrounds())
+benset_train_batchloader = BatchLoader(dataloader=benset_dataloader, x_set=benset_dataloader.get_train_data_keys(),
+                         y_set=benset_dataloader.get_train_annotations(),batch_size=batch_size,
+                         num_frames=num_frames,mode=mode,green_screen=green_screen, backgrounds=benset_dataloader.get_backgrounds(),
+                         augmentation=augmentation)
 
-x, y = benset_seq.__next__()
+batch_size = 1
+augmentation = 0
+benset_val_batchloader = BatchLoader(dataloader=benset_dataloader, x_set=benset_dataloader.get_val_data_keys(),
+                         y_set=benset_dataloader.get_val_annotations(),batch_size=batch_size,
+                         num_frames=num_frames,mode=mode, augmentation=augmentation)
 
+
+benset_test_batchloader = BatchLoader(dataloader=benset_dataloader, x_set=benset_dataloader.get_test_data_keys(),
+                         y_set=benset_dataloader.get_test_annotations(),batch_size=batch_size,
+                         num_frames=num_frames,mode=mode, augmentation=augmentation)
+
+
+
+
+
+x, y = ntu_te.__next__()
+x = x[0]
 
 
 frame_index = 0
-for frame in x[0]:
-    
+for frame in x[0,:]:
+    np.interp(frame, (-1,1), (0,255))
     cv2.imshow('image',frame)
     cv2.waitKey(0)
     frame_index = frame_index + 1

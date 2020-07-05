@@ -22,7 +22,7 @@ import time
 
 class BatchLoader(Sequence):
 
-    def __init__(self, dataloader, x_set, y_set, batch_size=6, num_frames = 16, mode=0, random_subsampling=0, green_screen=0, backgrounds=None):
+    def __init__(self, dataloader, x_set, y_set, batch_size=6, num_frames = 16, mode=0, random_subsampling=0, green_screen=0, backgrounds=None, augmentation = 0):
         
             self.dataloader = dataloader
             self.dataset_structure = dataloader.get_dataset_structure()
@@ -30,167 +30,197 @@ class BatchLoader(Sequence):
             self.y = y_set
             self.batch_size = batch_size
             self.num_frames = num_frames
+            
             self.batch_index = 0
-            self.frame_list_index = 0
-            self.next = 1
-            self.temp_dataset_list = x_set
+            self.sequence_index = 0
+            #self.next = 1
+            #self.temp_dataset_list = x_set
+            
             self.frame_list = []
             self.mode = mode
             self.random_subsampling = random_subsampling
             self.green_screen = green_screen
             self.seed = int(time.time())
+            
+            random.seed(self.seed)
+            self.inc_seed()
+            random.shuffle(self.x)
+            
             self.backgrounds = backgrounds
             
+            self.augmentation = augmentation
 
     def __len__(self):
             return calc.ceil(len(self.x) / self.batch_size)
 
     def __getitem__(self, idx):
-        
+            
+            
+            
+            clip_name = self.x[idx]
+            
+            #Path to Clip
+            path = self.dataloader.get_dataset_path()
+            path += "\\frames\\"
+            path += clip_name
+            
+            frames_of_sequence = self.dataset_structure[clip_name]
+            self.set_frame_list(frames_of_sequence)
+            if self.mode:
+                frames_of_sequence = frames_of_sequence[self.get_frame_list()[0].start:self.get_frame_list()[0].stop]
             
             batch_x = []
+            i = 0
             
-            #If last batch
-            if (idx + 1) >= self.__len__():
-                #Is last batch smaler than normal batchsize? 
-                if (len(self.x) % self.batch_size) == 0:
-                    batch_size = self.batch_size
-                else:
-                    #Set new size of smaller last batch
-                    batch_size = (len(self.x) % self.batch_size)
-            
+            if self.random_subsampling:
+                
+                random.seed(self.seed)
+                self.inc_seed()
+                
+                random_subsampling = random.randint(0, 1)
+                
+                random.seed(self.seed)
+                self.inc_seed()
+                
+                subsample_rate = random.randint(2, 20)
+                
+                subsample_counter = 0
             else:
-                batch_size = self.batch_size
+                random_subsampling = 0
             
             
-            for batch_item in range(batch_size):
+            seed_count = 1
+            for frame in frames_of_sequence:
                 
-                clip_name = self.x[idx * self.batch_size:(idx + 1) * self.batch_size][batch_item]
+                if random_subsampling:
+                    if subsample_counter == subsample_rate:
+                        subsample_counter = 0
+                        continue
+                    
+                    subsample_counter = subsample_counter + 1
                 
-                #Path to Clip
-                path = self.dataloader.get_dataset_path()
-                path += "\\frames\\"
-                path += clip_name
-                
-                frames_of_sequence = self.dataset_structure[clip_name]
+                #Path of each Frame of this Sequence
+                final_path = "{}{}{}".format(path, os.sep, frame)
             
-                sequence = []
-                i = 0
+                #load Image
                 
-                if self.random_subsampling:
-                    
-                    random.seed(self.seed)
-                    self.inc_seed()
-                    
-                    random_subsampling = random.randint(0, 1)
-                    
-                    random.seed(self.seed)
-                    self.inc_seed()
-                    
-                    subsample_rate = random.randint(2, 20)
-                    
-                    subsample_counter = 0
-                else:
-                    random_subsampling = 0
+                img = cv2.imread(final_path,1)
                 
+                #resize to 256x256
+                img = cv2.resize(img, (256,256), interpolation = cv2.INTER_AREA)
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
                 
-                seed_count = 1
-                for frame in frames_of_sequence:
-                    
-                    if random_subsampling:
-                        if subsample_counter == subsample_rate:
-                            subsample_counter = 0
-                            continue
+                if self.green_screen:
                         
-                        subsample_counter = subsample_counter + 1
+                    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
                     
-                    #Path of each Frame of this Sequence
-                    final_path = "{}{}{}".format(path, os.sep, frame)
-                
-                    #load Image
-                    #img = T(Image.open(final_path))
-                    img = cv2.imread(final_path,1)
+                    #sensitivity is a int, typically set to 15 - 20 
+        
+                    sensitivity = 30
                     
-                    #img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-                    #resize to 256x256
-                    img_256 = cv2.resize(img, (256,256), interpolation = cv2.INTER_AREA)
+                    lower_green = np.array([70 - sensitivity, 100, 100])
+                    upper_green = np.array([70 + sensitivity, 255, 255])
                     
+                    mask = cv2.inRange(hsv, lower_green, upper_green)
                     
-                    #normalize
-                    
+                    if self.backgrounds is None:
+                        random.seed(self.seed)
+                        self.inc_seed()
                         
-                    #restore RGB
-                    #img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                        r = random.randint(0, 255)
+                        
+                        
+                        random.seed(self.seed)
+                        self.inc_seed()
+                        
+                        g = random.randint(0, 255)
+                        
+                        
+                        random.seed(self.seed)
+                        self.inc_seed()
+                        
+                        b = random.randint(0, 255)
+                        
+                        img[mask>0]=(r,g,b)
+                    else:
+                        
+                        img[mask != 0] = [0, 0, 0]
+                        
+                        random.seed(self.seed)
+                        self.inc_seed()
+                        
+                        back_path = self.dataloader.get_dataset_path()
+                        back_path += "\\backgrounds\\"
+                        back_path += self.backgrounds[random.randint(0, len(self.backgrounds) - 1)]
+                        
+                        
+                        crop_background = cv2.imread(back_path, 1)
+                        
+                        random.seed(self.seed)
+                        self.inc_seed()
+                        
+                        crop_background = cv2.flip(crop_background, random.randint(-1, 1))
+                        
+                        crop_background[mask == 0] = [0, 0, 0]
+                        
+                        img = crop_background + img
                 
-                    #resize to 256x256
-                    #img_256 = cv2.resize(img, (256,256), interpolation = cv2.INTER_AREA)
-                
-                    #normalize
-                    #img_256_norm = cv2.normalize(img_256, None, -1, 1, cv2.NORM_MINMAX, cv2.CV_64F)
-                    
-                    sequence.append(img_256)
-                    
-                    
-                    i = i + 1
+                batch_x.append(img)
                 
                 
+                i = i + 1
+            
+            
+            #random.seed(self.seed)
+            #self.inc_seed()
+            if self.mode and self.augmentation:# and random.randint(0, 19) != 19 
+                batch_x = self.data_augmentation(batch_x)
+               
+            frame_index = 0
+            for frame in batch_x:
                 
-                
-                if self.mode:
-                    sequence = self.data_augmentation(sequence)
-                   
-                frame_index = 0
-                for frame in sequence:
-                    
-                    #sequence[frame_index] = cv2.normalize(frame, None, -1, 1, cv2.NORM_MINMAX, cv2.CV_64F)
-                    frame_index = frame_index + 1
-                
-                sequence = np.expand_dims(sequence, axis=0)
-                batch_x.append(sequence)
+                batch_x[frame_index] = cv2.normalize(frame, None, -1, 1, cv2.NORM_MINMAX, cv2.CV_64F)
+                frame_index = frame_index + 1
             
             
             
-            self.set_frame_list(batch_x, self.mode)
             
-            batch_y = self.y[clip_name]
+            
+            batch_y = self.y[clip_name][0]
             
             return batch_x, batch_y
 
-    def set_frame_list(self, batch_x, mode=0): #mode 1 = train, mode 0 = test
+    def set_frame_list(self, batch):
         
-        self.frame_list = []
+        num_frame_lists = (len(batch)-1) // self.num_frames
         
-        for batch in batch_x:
+        sub_frame_list = []
+        for i in range(num_frame_lists):
+            start = (i) * self.num_frames
+            end = (i+1) * self.num_frames
+            sub_frame_list.append(range(start, end))
             
-            num_frame_lists = int(len(batch[0]) / self.num_frames)
+        if len(batch)-1 % self.num_frames != 0:
             
-            sub_frame_list = []
-            for i in range(num_frame_lists):
-                start = (i) * self.num_frames
-                end = (i+1) * self.num_frames
-                sub_frame_list.append(range(start, end))
-                
-            if len(batch[0]) % self.num_frames != 0:
-                
-                sub_frame_list.append(range(len(batch[0])-1-self.num_frames, len(batch[0])-1))
-                
-            self.frame_list.append(sub_frame_list)
+            sub_frame_list.append(range(len(batch)-1-self.num_frames, len(batch)-1))
             
-        if mode:
+        self.frame_list = sub_frame_list
+        
+        if self.mode:
             
             random.seed(self.seed)
             self.inc_seed()
             
-            new_index = int(random.gauss((len(self.frame_list[0])-1)//2, (len(self.frame_list[0])-1)//5))
+            new_index = int(random.gauss((len(self.frame_list)-1)//2, (len(self.frame_list)-1)//4))
                             
-            if new_index > len(self.frame_list[0])-1:
-                new_index = len(self.frame_list[0])-1
+            if new_index > len(self.frame_list)-1:
+                new_index = len(self.frame_list)-1
                 
             if new_index < 0:
                 new_index = 0
             
-            #new_index = random.randint(0,len(self.frame_list[0])-1)
-            self.frame_list = [[self.frame_list[0][new_index]]]
+            self.frame_list = [self.frame_list[new_index]]
     
     def get_frame_list(self):
         
@@ -198,73 +228,49 @@ class BatchLoader(Sequence):
     
     def __next__(self):
         
-        if self.next:
+        if self.batch_index >= self.__len__()-1:
+            self.batch_index = 0
+            self.sequence_index = 0
+            
+            random.seed(self.seed)
+            self.inc_seed()
+            random.shuffle(self.x)
+            
         
-            if self.batch_index < self.__len__():
-                self.sequence = self.__getitem__(self.batch_index)
-            else:
-                self.batch_index = 0
-                self.frame_list_index = 0
-                self.next = 1
-                
-                random.seed(self.seed)
-                self.inc_seed()
-                
-                random.shuffle(self.x)
-                return None, None
+        batch_x = []
+        batch_y = []
             
-            self.frame_list_len = len(self.get_frame_list()[0])
-            
-            frame_list = self.get_frame_list()[0][self.frame_list_index]
         
-            first_frame = frame_list.start
-            last_frame = frame_list.stop
-            self.frame_list_index = self.frame_list_index + 1    
-            self.next = 0
-            return self.sequence[0][0][:,first_frame:last_frame,:,:,:], self.sequence[1]
+        for sequence in range(self.batch_size):
             
+            x, y = self.__getitem__(self.sequence_index)
             
-         
-        else:
+            if self.mode:
+                #frame_list = self.get_frame_list()[0]
+                #first_frame = frame_list.start
+                #last_frame = frame_list.stop
             
-            if self.frame_list_index < self.frame_list_len:
+                batch_x.append(np.expand_dims(np.reshape(np.array(x), (self.num_frames, 256, 256, 3)), axis = 0))
+                batch_y.append(y)
+            
                 
-                frame_list = self.get_frame_list()[0][self.frame_list_index]
+                #TODO else: NOT MODE = 1
+            
+            self.sequence_index = self.sequence_index + 1
+                
+        self.batch_index = self.batch_index + 1
         
-                first_frame = frame_list.start
-                last_frame = frame_list.stop
-                self.frame_list_index = self.frame_list_index + 1    
-                self.next = 0
-                return self.sequence[0][0][:,first_frame:last_frame,:,:,:], self.sequence[1]
-                
-                
-                
-            else: 
-                
-                self.batch_index = self.batch_index + 1
-                self.frame_list_index = 0
-                
-                
-                if self.batch_index < self.__len__():
-                    self.sequence = self.__getitem__(self.batch_index)
-                else:
-                    self.batch_index = 0
-                    self.frame_list_index = 0
-                    self.next = 1
-                    random.seed(self.seed)
-                    self.inc_seed()
-                    random.shuffle(self.x)
-                    return None, None
-                
-                self.frame_list_len = len(self.get_frame_list()[0])
-                
-                frame_list = self.get_frame_list()[0][self.frame_list_index]
+        batch_x = np.vstack(batch_x)
+        y = np.vstack(batch_y)
+        
+        batch_y = []
+        for _ in range(self.dataloader.get_num_action_predictions()):
+            batch_y.append(y)
             
-                first_frame = frame_list.start
-                last_frame = frame_list.stop
-                self.frame_list_index = self.frame_list_index + 1    
-                self.next = 0
-                return self.sequence[0][0][:,first_frame:last_frame,:,:,:], self.sequence[1]
+        #batch_y = np.reshape(np.array(batch_y), (1,4))
+            
+        return batch_x, batch_y
+        
         
     def inc_seed(self):
         
@@ -282,7 +288,8 @@ class BatchLoader(Sequence):
         random.seed(self.seed)
         self.inc_seed() 
         
-        square = random.randint(0,1)
+        #square = random.randint(0,1)
+        square = 0
         """
         hflip
         
@@ -297,11 +304,13 @@ class BatchLoader(Sequence):
         
         zoom_scale_rot_aug = iaa.Sequential([
                                     iaa.Affine(
-                                    scale={"x": (0.8, 1.2), "y": (0.8, 1.2)},
-                                    translate_percent={"x": (-0.2, 0.2), "y": (-0.2, 0.2)},
-                                    rotate=(-25, 25),
-                                    shear=(-8, 8)
+                                    scale={"x": (0.9, 1.1), "y": (0.9, 1.1)},
+                                    translate_percent={"x": (-0.1, 0.1), "y": (-0.1, 0.1)},
+                                    rotate=(-10, 10)
+                                    
                                     )], random_order=True)
+        
+        
     
         zoom_scale_rot_det = zoom_scale_rot_aug.to_deterministic()
         
@@ -335,22 +344,22 @@ class BatchLoader(Sequence):
             Zoom & Verschiebung
             """
             
-            frame = zoom_scale_rot_det.augment_image(frame)
+            #frame = zoom_scale_rot_det.augment_image(frame)
             
             """
             black Background after rotation to green
             
             """
-            hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+            #hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
                         
             #sensitivity is a int, typically set to 15 - 20 
 
-            lower_black = np.array([0, 0, 0])
-            upper_black = np.array([180, 255, 10])
+            #lower_black = np.array([0, 0, 0])
+            #upper_black = np.array([180, 255, 10])
             
-            mask = cv2.inRange(hsv, lower_black, upper_black)
+            #mask = cv2.inRange(hsv, lower_black, upper_black)
             
-            frame[mask>0]=(79,255,7)
+            #frame[mask>0]=(79,255,7)
             
             
             """
@@ -358,60 +367,7 @@ class BatchLoader(Sequence):
             
             """
             
-            if self.green_screen:
-                        
-                hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-                
-                #sensitivity is a int, typically set to 15 - 20 
-    
-                sensitivity = 30
-                
-                lower_green = np.array([70 - sensitivity, 100, 100])
-                upper_green = np.array([70 + sensitivity, 255, 255])
-                
-                mask = cv2.inRange(hsv, lower_green, upper_green)
-                
-                if self.backgrounds is None:
-                    random.seed(self.seed)
-                    self.inc_seed()
-                    
-                    r = random.randint(0, 255)
-                    
-                    
-                    random.seed(self.seed)
-                    self.inc_seed()
-                    
-                    g = random.randint(0, 255)
-                    
-                    
-                    random.seed(self.seed)
-                    self.inc_seed()
-                    
-                    b = random.randint(0, 255)
-                    
-                    frame[mask>0]=(r,g,b)
-                else:
-                    
-                    frame[mask != 0] = [0, 0, 0]
-                    
-                    random.seed(self.seed)
-                    self.inc_seed()
-                    
-                    back_path = self.dataloader.get_dataset_path()
-                    back_path += "\\backgrounds\\"
-                    back_path += self.backgrounds[random.randint(0, len(self.backgrounds) - 1)]
-                    
-                    
-                    crop_background = cv2.imread(back_path, 1)
-                    
-                    random.seed(self.seed)
-                    self.inc_seed()
-                    
-                    crop_background = cv2.flip(crop_background, random.randint(-1, 1))
-                    
-                    crop_background[mask == 0] = [0, 0, 0]
-                    
-                    frame = crop_background + frame
+            
             
             
             sequence[counter] = frame
@@ -431,8 +387,11 @@ class BatchLoader(Sequence):
                                     # image. Don't execute all of them, as that would often be way too
                                     # strong.
                                     #
-                                    iaa.SomeOf((0, 3),
+                                    iaa.SomeOf((0, 1),
                                         [
+                                            
+                                            
+                                            
                                             # Convert some images into their superpixel representation,
                                             # sample between 20 and 200 superpixels per image, but do
                                             # not replace all superpixels with their average, only
@@ -489,12 +448,12 @@ class BatchLoader(Sequence):
                                             iaa.OneOf([
                                                 iaa.Dropout((0.01, 0.1), per_channel=0.5),
                                                 iaa.CoarseDropout(
-                                                    (0.03, 0.15), size_percent=(0.02, 0.05),
+                                                    (0.03, 0.10), size_percent=(0.02, 0.03),
                                                     per_channel=0.2
                                                 ),
                                             ]),
                             
-                                        
+                                            iaa.Add((-10, 10), per_channel=0.5),
                                             # Change brightness of images (50-150% of original value).
                                             iaa.Multiply((0.5, 1.5), per_channel=0.5),
                             
@@ -506,7 +465,9 @@ class BatchLoader(Sequence):
                                             # colors with varying strengths.
                                             iaa.Grayscale(alpha=(0.0, 1.0)),
                             
-                                           
+                                           #sometimes(
+                                            #    iaa.ElasticTransformation(alpha=(0.5, 3.5), sigma=0.25)
+                                            #),
                             
                                             # In some images distort local areas with varying strength.
                                             sometimes(iaa.PiecewiseAffine(scale=(0.01, 0.05)))

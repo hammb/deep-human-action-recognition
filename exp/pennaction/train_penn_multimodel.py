@@ -56,13 +56,13 @@ batch_size_penn = num_frames
 batch_clips = 4 # 8/4
 
 """Load datasets"""
-mpii = MpiiSinglePerson(datasetpath('MPII'), dataconf=mpii_dataconf,
+mpii = MpiiSinglePerson("D:\\MPII", dataconf=mpii_dataconf,
         poselayout=pa16j2d)
 
-penn_sf = PennAction(datasetpath('Penn_Action'), pennaction_pe_dataconf,
+penn_sf = PennAction("D:\\PennAction", pennaction_pe_dataconf,
         poselayout=pa16j2d, topology='frames', use_gt_bbox=True)
 
-penn_seq = PennAction("E:\\Bachelorarbeit-SS20\\datasets\\PennAction", pennaction_dataconf,
+penn_seq = PennAction("D:\\PennAction", pennaction_dataconf,
         poselayout=pa16j2d, topology='sequences', use_gt_bbox=True,
         clip_size=num_frames)
 

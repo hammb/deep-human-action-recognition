@@ -35,7 +35,7 @@ from mpii_tools import MpiiEvalCallback
 from h36m_tools import H36MEvalCallback
 
 
-logdir = './'
+logdir = "E:\\Bachelorarbeit-SS20\\weights\\deephar\\output\\ntu_baseline\\0702"
 if len(sys.argv) > 1:
     logdir = sys.argv[1]
     mkdir(logdir)
@@ -47,16 +47,14 @@ cfg = ModelConfig(mpii_dataconf.input_shape, pa17j3d, num_pyramids=8,
 num_predictions = spnet.get_num_predictions(cfg.num_pyramids, cfg.num_levels)
 
 start_lr = 0.001
-logdir = "C:\\networks\\deephar\\logs"
 weights_path = os.path.join(logdir, 'weights_posebaseline_{epoch:03d}.hdf5')
 
-batch_size_mpii = 14
+batch_size_mpii = 7
 batch_size_ar = 2
 
 """Load datasets"""
 mpii = MpiiSinglePerson("D:\\MPII", dataconf=mpii_dataconf,
         poselayout=pa17j3d)
-
 
 h36m = Human36M("B:\\Human3.6M", dataconf=human36m_dataconf,
         poselayout=pa17j3d, topology='frames')
@@ -93,13 +91,17 @@ h36m_callback = H36MEvalCallback(x_val, pw_val, afmat_val,
 
 model = spnet.build(cfg)
 
+model.load_weights(
+         "E:\\Bachelorarbeit-SS20\\weights\\deephar\\output\\ntu_baseline\\0603\\weights_posebaseline_060.hdf5",
+         by_name=True)
+
 loss = pose_regression_loss('l1l2bincross', 0.01)
 model.compile(loss=loss, optimizer=RMSprop(lr=start_lr))
 model.summary()
 
 callbacks = []
 callbacks.append(SaveModel(weights_path))
-callbacks.append(mpii_callback)
+#callbacks.append(mpii_callback)
 callbacks.append(h36m_callback)
 
 steps_per_epoch = mpii.get_length(TRAIN_MODE) // batch_size_mpii
@@ -110,4 +112,3 @@ model.fit_generator(data_tr,
         callbacks=callbacks,
         workers=8,
         initial_epoch=0)
-

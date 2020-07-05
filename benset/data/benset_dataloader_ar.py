@@ -8,8 +8,9 @@ import numpy as np
 import time
 
 class Benset(object):
-    def __init__(self, dataset_path, num_action_predictions, pose_predictons_path=None, dataset_structure_file_path=None, adjust_dataset_structure=False, test_data_file_path=None, use_backgrounds=False):
+    def __init__(self, dataset_path, num_action_predictions, use_backgrounds=False, train_data_keys = None, val_data_keys = None):
         
+        self.num_action_predictions = num_action_predictions
         self.dataset_path = dataset_path
         self.use_backgrounds = use_backgrounds
         #700 Action 0
@@ -26,8 +27,29 @@ class Benset(object):
         num_cams = 2
         
         self.dataset_annotations = {}
-        
         self.generate_dataset_structure(num_sequences, num_cams, num_clips_per_recording, num_action_predictions)
+        
+        if train_data_keys is not None:
+            self.train_data_keys = train_data_keys
+            
+            self.test_annotations = copy.deepcopy(self.dataset_annotations)
+            
+            for sequence in train_data_keys:
+                self.test_annotations.pop(sequence)
+            
+            
+        if val_data_keys is not None:
+            self.test_data_keys = val_data_keys
+            
+            self.train_annotations = copy.deepcopy(self.dataset_annotations)
+            
+            for sequence in val_data_keys:
+                self.train_annotations.pop(sequence)
+                
+                
+            #TODO !!!!!!!!!
+            self.val_data_keys = self.test_data_keys
+            self.val_annotations = self.test_annotations
             
     def generate_dataset_structure(self, num_sequences, num_cams, num_clips_per_recording, num_action_predictions):
         
@@ -37,7 +59,7 @@ class Benset(object):
             #TODO
             toggle_cam = 0
         
-        proportion_train_test = 5 # Verhältnis 20 / 80 : Test / Train -> (1/5)
+        #proportion_train_test = 5 # Verhältnis 20 / 80 : Test / Train -> (1/5)
         
         self.dataset_structure = {}
         self.dataset_keys = {}
@@ -83,24 +105,39 @@ class Benset(object):
         train_data = []
         
         dataset_structure_keys = list(self.dataset_structure.keys())
-        self.dataset_keys = dataset_structure_keys
-                        
-        counter = 1
-        for sequence in self.dataset_keys:
-            if proportion_train_test == counter:
-                test_data.append(sequence)
-                counter = 1
-            else:
-                train_data.append(sequence)
-                counter += 1          
+        self.dataset_keys = copy.deepcopy(dataset_structure_keys)
+        split_train_val_test = copy.deepcopy(dataset_structure_keys)
         
-        self.train_data_keys = train_data
         random.seed(int(time.time()))
-        random.shuffle(self.train_data_keys)
-        self.test_data_keys = test_data
-        random.seed(int(time.time()))
-        random.shuffle(self.test_data_keys)
-        self.pool_of_train_data = copy.deepcopy(self.train_data_keys)
+        self.train_data_keys = np.random.choice(dataset_structure_keys, size=int((len(dataset_structure_keys) * 0.8)), replace=False)
+        
+        for sequence in self.train_data_keys:
+            split_train_val_test.remove(sequence)
+        
+        random.seed(int(time.time())+1)
+        self.test_data_keys = np.random.choice(split_train_val_test, size=int((len(split_train_val_test) * 0.5)), replace=False)
+        
+        for sequence in self.test_data_keys:
+            split_train_val_test.remove(sequence)
+        
+        self.val_data_keys = np.asarray(split_train_val_test)
+                 
+        #counter = 1
+        #for sequence in self.dataset_keys:
+        #    if proportion_train_test == counter:
+        #        test_data.append(sequence)
+        #        counter = 1
+        #    else:
+        #        train_data.append(sequence)
+        #        counter += 1          
+        
+        #self.train_data_keys = train_data
+        #random.seed(int(time.time()))
+        #random.shuffle(self.train_data_keys)
+        #self.test_data_keys = test_data
+        #random.seed(int(time.time()))
+        #random.shuffle(self.test_data_keys)
+        #self.pool_of_train_data = copy.deepcopy(self.train_data_keys)
         
         for sequence in dataset_structure_keys:
             actions = []
@@ -123,12 +160,19 @@ class Benset(object):
                 
         self.train_annotations = copy.deepcopy(self.dataset_annotations)
         self.test_annotations = copy.deepcopy(self.dataset_annotations)
-    
-        for sequence in train_data:
+        self.val_annotations = copy.deepcopy(self.dataset_annotations)
+        
+        for sequence in self.train_data_keys:
             self.test_annotations.pop(sequence)
+            self.val_annotations.pop(sequence)
     
-        for sequence in test_data:
+        for sequence in self.test_data_keys:
             self.train_annotations.pop(sequence)
+            self.val_annotations.pop(sequence)
+            
+        for sequence in self.val_data_keys:
+            self.train_annotations.pop(sequence)
+            self.test_annotations.pop(sequence)
             
             
         #self.load_pictures()
@@ -157,6 +201,10 @@ class Benset(object):
         
         return self.test_data_keys
     
+    def get_val_data_keys(self):
+        
+        return self.val_data_keys
+    
     def get_dataset_structure(self):
         
         return self.dataset_structure
@@ -172,6 +220,10 @@ class Benset(object):
     def get_train_annotations(self):
         
         return self.train_annotations
+    
+    def get_val_annotations(self):
+        
+        return self.val_annotations
     
     def get_test_annotations(self):
         
@@ -206,7 +258,7 @@ class Benset(object):
                 
             self.dataset.update({sequence:seq})
                 
-    def shuffle_train_data(self):
-        #self.test_data_keys = random.choices(self.pool_of_train_data, k=len(self.test_data_keys))
-        random.seed(int(time.time()))
-        random.shuffle(self.train_data_keys)
+        
+    def get_num_action_predictions(self):
+        
+        return self.num_action_predictions
