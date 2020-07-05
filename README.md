@@ -1,5 +1,7 @@
 # Deep Human Action Recognition
 
+Multi-task framework for jointly estimating 2D or 3D human poses from monocular color images and classifying human actions from video sequences.
+
 ![Predictions_pose](images/pose_normal.PNG)
 
 Predicted Pose
