@@ -1,7 +1,12 @@
 # Deep Human Action Recognition
 
 ![Predictions_pose](images/pose_normal.PNG)
+
+Predicted Pose
+
 ![Predictions_action](images/taking a selfie.PNG)
+
+Predicted action (NTU Dataset)
 
 ## Limitations
 
