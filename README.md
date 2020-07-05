@@ -1,7 +1,7 @@
 # Deep Human Action Recognition
 
-(images/pose_normal.png)
-(images/taking a selfie.png)
+![Predictions_pose](images/pose_normal.png)
+![Predictions_action](images/taking a selfie.png)
 
 ## Limitations
 
