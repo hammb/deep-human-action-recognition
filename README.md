@@ -1,5 +1,8 @@
 # Deep Human Action Recognition
 
+(images/pose_normal.png)
+(images/taking a selfie.png)
+
 ## Limitations
 
 Note that python3 is **required** and is used unless specified.
