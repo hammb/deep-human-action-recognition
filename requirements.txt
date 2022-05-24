@@ -3,4 +3,4 @@ keras==2.1.3
 scipy
 h5py
 opencv-python
-tensorflow-gpu==1.14
+tensorflow-gpu==2.6.4
